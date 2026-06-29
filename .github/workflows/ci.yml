@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  # Allow release.yml to run this exact suite as a gating `uses:` job before it
+  # publishes anything.
+  workflow_call:
+
+concurrency:
+  # Include github.workflow so a direct CI run and the `uses:`-embedded CI job of
+  # release.yml land in DISTINCT groups (in a reusable workflow github.workflow
+  # resolves to the CALLER), so the tag-triggered release caller does not cancel
+  # an in-flight CI run.
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  build-test:
+    name: fmt · clippy · unit + proptest + doc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      # Debug-profile cache (clippy + test); only write from main so PR branches
+      # don't evict main's cache via the 10 GB LRU cap.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Unit tests + property-based fuzzing
+        run: cargo test --workspace --all-features
+
+      - name: Docs (deny warnings)
+        run: RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+
+  e2e:
+    name: SQLLogic e2e (haybarn)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      # Share one release-profile cache with metadata-quality (both build the
+      # worker in release mode), so the dependency graph compiles once.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install the haybarn unittest runner
+        run: |
+          uv tool install haybarn-unittest
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install the vgi + inet extensions
+        # inet supplies DuckDB's INET type, which the read_rib/read_updates/peers
+        # tests cast prefixes and peer IPs to.
+        run: |
+          echo "INSTALL vgi FROM community;" | uvx haybarn-cli
+          echo "INSTALL inet;" | uvx haybarn-cli
+
+      - name: Run SQLLogic suite against the built worker
+        run: ./run_tests.sh
+
+  metadata-quality:
+    name: metadata quality (vgi-lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build worker (release)
+        run: cargo build --release --bin bgp-worker
+
+      - name: vgi-lint
+        uses: Query-farm/vgi-lint-check@v1
+        with:
+          version: "0.37.0"
+          location: "${{ github.workspace }}/target/release/bgp-worker"
+          fail-on: info
+
+  audit:
+    name: supply-chain audit (cargo-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: cargo audit
+        uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # RUSTSEC-2025-0141: `bincode 1.3.3` is flagged *unmaintained* (not
+          # vulnerable — 1.3.3 was declared complete). It is a transitive dep we
+          # don't pull directly, so ignore this informational advisory; real
+          # vulnerabilities still fail the job.
+          ignore: RUSTSEC-2025-0141
+
+  msrv:
+    name: MSRV check (rust 1.90)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (pinned MSRV)
+        uses: dtolnay/rust-toolchain@1.90
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: msrv
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: cargo check (workspace, all features)
+        run: cargo check --workspace --all-features

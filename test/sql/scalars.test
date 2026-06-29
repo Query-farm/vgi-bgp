@@ -1,0 +1,78 @@
+# name: test/sql/scalars.test
+# description: AS-path and community helper scalars + version (no files needed).
+# group: [sql]
+
+require-env VGI_BGP_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION '${VGI_BGP_WORKER}');
+
+statement ok
+SET search_path='bgp.main';
+
+# Version is a non-empty semver string.
+query I
+SELECT regexp_full_match(bgp_version(), '\d+\.\d+\.\d+')::INT;
+----
+1
+
+# path_length counts AS hops.
+query I
+SELECT path_length([7018, 174, 13335]);
+----
+3
+
+# origin_asn is the last AS in the path.
+query I
+SELECT origin_asn([7018, 174, 13335]);
+----
+13335
+
+# as_path_prepends counts padded repeats.
+query I
+SELECT as_path_prepends([7018, 174, 174, 13335]);
+----
+1
+
+# path_contains finds an ASN anywhere in the path.
+query I
+SELECT path_contains([7018, 174, 13335], 174)::INT;
+----
+1
+
+query I
+SELECT path_contains([7018, 174, 13335], 65000)::INT;
+----
+0
+
+# community_parse splits a standard community into a struct.
+query II
+SELECT community_parse('65001:100').asn, community_parse('65001:100').value;
+----
+65001	100
+
+# community_parse yields NULL for a large community.
+query I
+SELECT community_parse('65001:1:2') IS NULL;
+----
+true
+
+# is_large_community classifies large vs standard.
+query I
+SELECT is_large_community('65001:1:2')::INT;
+----
+1
+
+query I
+SELECT is_large_community('65001:100')::INT;
+----
+0
+
+statement ok
+SET search_path='memory.main';
+
+statement ok
+DETACH bgp;

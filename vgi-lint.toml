@@ -1,0 +1,22 @@
+# vgi-lint-check configuration for the vgi-bgp worker.
+#
+# The catalog `source_url` (→ the GitHub repo), the classifying schema tags
+# (domain / category / topic), titles, doc_llm / doc_md, keywords, per-argument
+# docs, example_queries, and the executable_examples payload are all emitted from
+# the worker's catalog + FunctionMetadata (crates/bgp-worker/src/**), which the
+# linter reads over VGI. All of those STATIC metadata rules gate at `info`.
+#
+# The example-EXECUTION rules (VGI901/902/906/907) are disabled: the headline
+# examples scan an MRT file (read_rib / read_updates need a `src` file present)
+# and use the core `INET` type (`prefix::INET <<= …`), which needs `LOAD inet;`.
+# The lint sandbox attaches only the worker, so those rows would not materialize
+# there — but the same queries are covered by the haybarn SQLLogic E2E
+# (test/sql/*.test), which loads `vgi` + `inet` and runs them for real. Every
+# static metadata rule still gates at --fail-on info.
+[tool.vgi-lint-check]
+select = ["ALL"]
+ignore = ["VGI901", "VGI902", "VGI906", "VGI907"]
+fail_on = "info"
+
+[tool.vgi-lint-check.options]
+column_comment_min_ratio = 0.8

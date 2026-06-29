@@ -1,0 +1,27 @@
+[package]
+name = "bgp-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Pure-compute MRT (TABLE_DUMP_V2 / BGP4MP) decode → row structs plus AS-path and BGP-community helpers for the bgp VGI worker (no Arrow/VGI deps)"
+
+[dependencies]
+# MRT / BGP4MP / TABLE_DUMP_V2 decode (MIT). Only the `parser` feature: no oneio
+# (remote fetch — the worker does its own object_store I/O) and no RPKI (ROV
+# belongs in vgi-netflow). bgpkit re-exports ipnet, which models prefixes.
+bgpkit-parser = { version = "0.17", default-features = false, features = ["parser"] }
+ipnet = "2"
+# Transparent input decompression of MRT archives. gzip via flate2; bzip2 via the
+# pure-Rust bzip2-rs decoder (no libbz2 C dependency) — RouteViews ships `.bz2`,
+# RIPE RIS ships `.gz`.
+flate2 = "1"
+bzip2-rs = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+proptest = "1"
+
+[lints.rust]
+unsafe_code = "forbid"

@@ -1,0 +1,78 @@
+# name: test/sql/read_rib.test
+# description: read_rib over the golden TABLE_DUMP_V2 fixture, incl. INET
+#              containment and AS-path helpers over the as_path column.
+# group: [sql]
+
+require-env VGI_BGP_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+LOAD inet;
+
+statement ok
+ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION '${VGI_BGP_WORKER}');
+
+# prefix / peer_ip / next_hop are emitted as the DuckDB INET physical struct
+# (cast `::INET`), so containment and prefix joins work.
+query T
+SELECT typeof(prefix) FROM bgp.main.read_rib('data/rib.mrt') LIMIT 1;
+----
+STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)
+
+# Three RIB entries: 203.0.113.0/24 from two peers + an IPv6 prefix.
+query I
+SELECT count(*) FROM bgp.main.read_rib('data/rib.mrt');
+----
+3
+
+# INET containment: two routes cover 203.0.113.5 (the spec's leak/hijack triage).
+query I
+SELECT count(*) FROM bgp.main.read_rib('data/rib.mrt')
+WHERE prefix::INET >>= '203.0.113.5'::INET;
+----
+2
+
+# The reverse containment (routes within the /24).
+query I
+SELECT count(*) FROM bgp.main.read_rib('data/rib.mrt')
+WHERE prefix::INET <<= '203.0.113.0/24'::INET;
+----
+2
+
+# Prefixes round-trip through INET to canonical strings (IPv4 + IPv6).
+query T
+SELECT DISTINCT (prefix::INET)::VARCHAR AS p FROM bgp.main.read_rib('data/rib.mrt')
+ORDER BY p;
+----
+2001:db8:abcd::/48
+203.0.113.0/24
+
+# AS-path helpers over the as_path column: the prepended route has 4 hops and 1
+# prepend; origin is 64512.
+query III
+SELECT bgp.main.path_length(as_path), bgp.main.as_path_prepends(as_path),
+       bgp.main.origin_asn(as_path)
+FROM bgp.main.read_rib('data/rib.mrt')
+WHERE peer_asn = 65001 AND prefix::INET = '203.0.113.0/24'::INET;
+----
+4	1	64512
+
+# The IPv4/65001 route carries a large community.
+query I
+SELECT list_contains(communities, '65001:1:2')::INT
+FROM bgp.main.read_rib('data/rib.mrt')
+WHERE peer_asn = 65001 AND prefix::INET = '203.0.113.0/24'::INET;
+----
+1
+
+# peer_ip and next_hop are also INET.
+query T
+SELECT (next_hop::INET)::VARCHAR FROM bgp.main.read_rib('data/rib.mrt')
+WHERE peer_asn = 65002;
+----
+198.51.100.7
+
+statement ok
+DETACH bgp;

@@ -1,0 +1,30 @@
+[workspace]
+resolver = "2"
+members = ["crates/bgp-core", "crates/bgp-worker"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.90"
+license = "MIT"
+authors = ["Query Farm LLC <hello@query.farm>"]
+repository = "https://github.com/Query-farm/vgi-bgp"
+
+[workspace.dependencies]
+# VGI Rust SDK (worker side). Published on crates.io. Pinned to the same
+# release line vgi-fixedformat ships, so a single arrow/vgi-rpc resolves.
+vgi = "0.9.5"
+vgi-rpc = { version = "0.7.0", default-features = false, features = ["macros", "http"] }
+arrow = { version = "59", default-features = false, features = ["ipc"] }
+arrow-array = "59"
+arrow-buffer = "59"
+arrow-data = "59"
+arrow-schema = "59"
+arrow-select = "59"
+arrow-cast = "59"
+
+bgp-core = { path = "crates/bgp-core" }
+
+[profile.release]
+opt-level = 2
+strip = true

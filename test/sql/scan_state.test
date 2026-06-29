@@ -1,0 +1,42 @@
+# name: test/sql/scan_state.test
+# description: the byte-offset scan state round-trips across Arrow batch
+#              boundaries. run_tests.sh sets VGI_BGP_BATCH_ROWS=1, so each record
+#              is emitted in its own batch — the full row set must still
+#              reassemble exactly, proving the producer streams correctly across
+#              batch boundaries.
+# group: [sql]
+
+require-env VGI_BGP_WORKER
+
+require-env VGI_BGP_BATCH_ROWS
+
+statement ok
+LOAD vgi;
+
+statement ok
+LOAD inet;
+
+statement ok
+ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION '${VGI_BGP_WORKER}');
+
+# With one row per batch, all three RIB entries still arrive (no loss/duplication
+# across batch boundaries).
+query I
+SELECT count(*) FROM bgp.main.read_rib('data/rib.mrt');
+----
+3
+
+# Aggregations span batches correctly.
+query I
+SELECT count(DISTINCT (prefix::INET)::VARCHAR) FROM bgp.main.read_rib('data/rib.mrt');
+----
+2
+
+# The update stream reassembles across batches too.
+query I
+SELECT count(*) FROM bgp.main.read_updates('data/updates.mrt');
+----
+3
+
+statement ok
+DETACH bgp;

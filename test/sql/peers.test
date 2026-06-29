@@ -1,0 +1,33 @@
+# name: test/sql/peers.test
+# description: peers() enumerates the distinct peers in an MRT file.
+# group: [sql]
+
+require-env VGI_BGP_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+LOAD inet;
+
+statement ok
+ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION '${VGI_BGP_WORKER}');
+
+# Three distinct peers in the RIB fixture's PEER_INDEX_TABLE.
+query I
+SELECT count(*) FROM bgp.main.peers('data/rib.mrt');
+----
+3
+
+# peer_ip is INET; round-trips to canonical strings with the peer ASN.
+query TI
+SELECT (peer_ip::INET)::VARCHAR AS pip, peer_asn
+FROM bgp.main.peers('data/rib.mrt')
+ORDER BY pip;
+----
+192.0.2.1	65001
+198.51.100.7	65002
+2001:db8::1	65001
+
+statement ok
+DETACH bgp;

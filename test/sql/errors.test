@@ -1,0 +1,39 @@
+# name: test/sql/errors.test
+# description: per-record error capture on a truncated tail record, and the
+#              strict-mode abort.
+# group: [sql]
+
+require-env VGI_BGP_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION '${VGI_BGP_WORKER}');
+
+# Non-strict (default): the truncated tail surfaces as exactly one error row with
+# the data fields left NULL — the scan does NOT crash.
+query I
+SELECT count(*) FROM bgp.main.read_rib('data/truncated.mrt') WHERE error IS NOT NULL;
+----
+1
+
+# The leading intact record(s) still decode alongside the error row.
+query I
+SELECT (count(*) FILTER (WHERE error IS NULL)) >= 1
+FROM bgp.main.read_rib('data/truncated.mrt');
+----
+true
+
+# strict => true turns the truncated tail into a hard error.
+statement error
+SELECT count(*) FROM bgp.main.read_rib('data/truncated.mrt', strict => true);
+----
+
+# A missing local file is reported at bind time.
+statement error
+SELECT * FROM bgp.main.read_rib('data/does_not_exist.mrt');
+----
+
+statement ok
+DETACH bgp;
