@@ -13,7 +13,7 @@ repository = "https://github.com/Query-farm/vgi-bgp"
 [workspace.dependencies]
 # VGI Rust SDK (worker side). Published on crates.io. Pinned to the same
 # release line vgi-fixedformat ships, so a single arrow/vgi-rpc resolves.
-vgi = "0.9.5"
+vgi = "0.10.0"
 vgi-rpc = { version = "0.7.0", default-features = false, features = ["macros", "http"] }
 arrow = { version = "59", default-features = false, features = ["ipc"] }
 arrow-array = "59"
