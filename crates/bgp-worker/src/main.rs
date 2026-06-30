@@ -135,18 +135,25 @@ fn catalog_metadata(name: &str) -> CatalogModel {
             ),
             (
                 "vgi.example_queries".to_string(),
-                "SELECT bgp.main.bgp_version();\n\
-                 SELECT bgp.main.path_length([7018, 174, 13335]);\n\
-                 SELECT bgp.main.origin_asn([7018, 174, 13335]);\n\
-                 SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]);\n\
-                 SELECT bgp.main.path_contains([7018, 174, 13335], 174);\n\
-                 SELECT bgp.main.community_parse('65001:100');\n\
-                 SELECT bgp.main.is_large_community('65001:1:2');\n\
-                 SELECT count(*) FROM bgp.main.read_rib('data/rib.mrt');\n\
-                 SELECT message_type, count(*) FROM \
-                 bgp.main.read_updates('data/updates.mrt') GROUP BY 1;\n\
-                 SELECT * FROM bgp.main.peers('data/rib.mrt');"
-                    .to_string(),
+                // Self-contained: the read_* / peers examples scan an inline MRT BLOB via
+                // `from_hex(...)` so they execute without a `data/*.mrt` file or `LOAD inet`.
+                // A real deployment passes a path or URL, e.g.
+                // `read_rib('https://routeviews.org/.../rib.20260629.0000.bz2')`.
+                format!(
+                    "SELECT bgp.main.bgp_version();\n\
+                     SELECT bgp.main.path_length([7018, 174, 13335]);\n\
+                     SELECT bgp.main.origin_asn([7018, 174, 13335]);\n\
+                     SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]);\n\
+                     SELECT bgp.main.path_contains([7018, 174, 13335], 174);\n\
+                     SELECT bgp.main.community_parse('65001:100');\n\
+                     SELECT bgp.main.is_large_community('65001:1:2');\n\
+                     SELECT count(*) FROM bgp.main.read_rib(from_hex('{rib}'));\n\
+                     SELECT message_type, count(*) FROM \
+                     bgp.main.read_updates(from_hex('{upd}')) GROUP BY 1;\n\
+                     SELECT * FROM bgp.main.peers(from_hex('{rib}'));",
+                    rib = crate::meta::RIB_MRT_HEX,
+                    upd = crate::meta::UPD_MRT_HEX,
+                ),
             ),
             ("vgi.author".to_string(), "Query.Farm".to_string()),
             (
@@ -207,20 +214,25 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                 ),
                 (
                     "vgi.example_queries".to_string(),
-                    "SELECT bgp.main.bgp_version();\n\
-                     SELECT bgp.main.path_length([7018, 174, 13335]);\n\
-                     SELECT bgp.main.origin_asn([7018, 174, 13335]);\n\
-                     SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]);\n\
-                     SELECT bgp.main.path_contains([7018, 174, 13335], 174);\n\
-                     SELECT bgp.main.community_parse('65001:100');\n\
-                     SELECT bgp.main.is_large_community('65001:1:2');\n\
-                     SELECT count(*) FROM bgp.main.read_rib('data/rib.mrt');\n\
-                     SELECT peer_asn, origin_asn, as_path, bgp.main.path_length(as_path) AS hops, \
-                     next_hop FROM bgp.main.read_rib('data/rib.mrt') \
-                     WHERE prefix::INET >>= '203.0.113.5'::INET ORDER BY hops;\n\
-                     SELECT message_type, count(*) FROM bgp.main.read_updates('data/updates.mrt') \
-                     GROUP BY 1;"
-                        .to_string(),
+                    // Self-contained inline-BLOB examples (see the catalog note). For prefix
+                    // containment in a real query add `LOAD inet;` and filter
+                    // `WHERE prefix::INET >>= '203.0.113.5'::INET`.
+                    format!(
+                        "SELECT bgp.main.bgp_version();\n\
+                         SELECT bgp.main.path_length([7018, 174, 13335]);\n\
+                         SELECT bgp.main.origin_asn([7018, 174, 13335]);\n\
+                         SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]);\n\
+                         SELECT bgp.main.path_contains([7018, 174, 13335], 174);\n\
+                         SELECT bgp.main.community_parse('65001:100');\n\
+                         SELECT bgp.main.is_large_community('65001:1:2');\n\
+                         SELECT count(*) FROM bgp.main.read_rib(from_hex('{rib}'));\n\
+                         SELECT origin_asn, as_path, bgp.main.path_length(as_path) AS hops \
+                         FROM bgp.main.read_rib(from_hex('{rib}')) ORDER BY hops;\n\
+                         SELECT message_type, count(*) FROM \
+                         bgp.main.read_updates(from_hex('{upd}')) GROUP BY 1;",
+                        rib = crate::meta::RIB_MRT_HEX,
+                        upd = crate::meta::UPD_MRT_HEX,
+                    ),
                 ),
             ],
             views: Vec::new(),

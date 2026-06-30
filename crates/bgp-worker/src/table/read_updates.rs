@@ -6,7 +6,7 @@ use std::sync::Arc;
 use arrow_schema::SchemaRef;
 use vgi::secrets::SecretLookup;
 use vgi::table_function::{TableFunction, TableProducer};
-use vgi::{ArgSpec, BindParams, BindResponse, FunctionMetadata, ProcessParams};
+use vgi::{ArgSpec, BindParams, BindResponse, FunctionExample, FunctionMetadata, ProcessParams};
 use vgi_rpc::Result;
 
 use crate::cloud;
@@ -59,6 +59,17 @@ impl TableFunction for ReadUpdates {
         ));
         FunctionMetadata {
             description: "Read an MRT BGP4MP update stream into rows".into(),
+            examples: vec![FunctionExample {
+                sql: format!(
+                    "SELECT message_type, count(*) FROM bgp.main.read_updates(from_hex('{}')) \
+                     GROUP BY 1;",
+                    crate::meta::UPD_MRT_HEX
+                ),
+                description: "Count announce / withdraw / state-change messages in an inline \
+                              BGP4MP update stream."
+                    .into(),
+                expected_output: None,
+            }],
             tags,
             ..Default::default()
         }

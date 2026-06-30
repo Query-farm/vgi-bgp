@@ -13,7 +13,7 @@ use bgp_core::decode::{decompress_reader, next_record, Decoder};
 use bgp_core::PeerRow;
 use vgi::secrets::SecretLookup;
 use vgi::table_function::{TableFunction, TableProducer};
-use vgi::{ArgSpec, BindParams, BindResponse, FunctionMetadata, ProcessParams};
+use vgi::{ArgSpec, BindParams, BindResponse, FunctionExample, FunctionMetadata, ProcessParams};
 use vgi_rpc::{OutputCollector, Result, RpcError};
 
 use crate::cloud;
@@ -54,6 +54,14 @@ impl TableFunction for Peers {
         ));
         FunctionMetadata {
             description: "List the distinct peers / collectors in an MRT file".into(),
+            examples: vec![FunctionExample {
+                sql: format!(
+                    "SELECT peer_asn, collector FROM bgp.main.peers(from_hex('{}'));",
+                    crate::meta::RIB_MRT_HEX
+                ),
+                description: "List the peers in an inline TABLE_DUMP_V2 PEER_INDEX_TABLE.".into(),
+                expected_output: None,
+            }],
             tags,
             ..Default::default()
         }

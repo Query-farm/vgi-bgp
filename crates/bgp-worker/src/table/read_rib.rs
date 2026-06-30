@@ -6,7 +6,7 @@ use std::sync::Arc;
 use arrow_schema::SchemaRef;
 use vgi::secrets::SecretLookup;
 use vgi::table_function::{TableFunction, TableProducer};
-use vgi::{ArgSpec, BindParams, BindResponse, FunctionMetadata, ProcessParams};
+use vgi::{ArgSpec, BindParams, BindResponse, FunctionExample, FunctionMetadata, ProcessParams};
 use vgi_rpc::Result;
 
 use crate::cloud;
@@ -57,6 +57,15 @@ impl TableFunction for ReadRib {
         ));
         FunctionMetadata {
             description: "Read an MRT TABLE_DUMP_V2 RIB snapshot into rows".into(),
+            examples: vec![FunctionExample {
+                sql: format!(
+                    "SELECT prefix, origin_asn, as_path FROM bgp.main.read_rib(from_hex('{}'));",
+                    crate::meta::RIB_MRT_HEX
+                ),
+                description: "Scan an inline TABLE_DUMP_V2 RIB snapshot (3 entries) into rows."
+                    .into(),
+                expected_output: None,
+            }],
             tags,
             ..Default::default()
         }

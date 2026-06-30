@@ -6,16 +6,17 @@
 # the worker's catalog + FunctionMetadata (crates/bgp-worker/src/**), which the
 # linter reads over VGI. All of those STATIC metadata rules gate at `info`.
 #
-# The example-EXECUTION rules (VGI901/902/906/907) are disabled: the headline
-# examples scan an MRT file (read_rib / read_updates need a `src` file present)
-# and use the core `INET` type (`prefix::INET <<= …`), which needs `LOAD inet;`.
-# The lint sandbox attaches only the worker, so those rows would not materialize
-# there — but the same queries are covered by the haybarn SQLLogic E2E
-# (test/sql/*.test), which loads `vgi` + `inet` and runs them for real. Every
-# static metadata rule still gates at --fail-on info.
+# Every example is self-contained, so the example-EXECUTION rules
+# (VGI901/902/906/907) are ENABLED and run against the attached worker: the
+# read_rib / read_updates / peers examples scan an inline MRT BLOB via
+# `from_hex(...)` (no `data/*.mrt` file needed) and none of the executed examples
+# use the core `INET` type (which would need `LOAD inet;` — that path is exercised
+# instead by the haybarn SQLLogic E2E in test/sql/*.test, which loads `vgi` +
+# `inet`). The whole suite — static metadata and executed examples alike — gates
+# at --fail-on info.
 [tool.vgi-lint-check]
 select = ["ALL"]
-ignore = ["VGI901", "VGI902", "VGI906", "VGI907"]
+ignore = []
 fail_on = "info"
 
 [tool.vgi-lint-check.options]
