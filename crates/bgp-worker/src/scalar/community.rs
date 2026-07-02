@@ -59,6 +59,7 @@ impl ScalarFunction for CommunityParse {
                 "Parse a standard community into (asn, value), e.g. \
                  `community_parse('65001:100')` = {asn: 65001, value: 100}.",
                 "community parse, bgp community, asn value, standard community, tag, decode",
+                "BGP communities",
             ),
             ..Default::default()
         }
@@ -127,6 +128,7 @@ impl ScalarFunction for IsLargeCommunity {
                 "Whether a community is a large community, e.g. \
                  `is_large_community('65001:1:2')` = true.",
                 "large community, RFC 8092, community type, three part community, classify",
+                "BGP communities",
             ),
             ..Default::default()
         }

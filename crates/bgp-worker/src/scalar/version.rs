@@ -37,6 +37,7 @@ impl ScalarFunction for BgpVersion {
                     "Return the bgp worker version string, e.g. `bgp_version()` → '0.1.0'. \
                      Argument-free and deterministic.",
                     "version, build version, bgp_version, diagnostics, worker version, semver",
+                    "Worker info",
                 );
                 tags.push((
                     "vgi.executable_examples".into(),

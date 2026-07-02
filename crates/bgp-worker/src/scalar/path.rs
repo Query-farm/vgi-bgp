@@ -63,6 +63,7 @@ impl ScalarFunction for PathLength {
                  path).",
                 "Number of AS hops in an AS path, e.g. `path_length([7018,174,13335])` = 3.",
                 "path length, as path length, hops, route length, as_path, leak, hijack",
+                "AS-path analysis",
             ),
             ..Default::default()
         }
@@ -110,6 +111,7 @@ impl ScalarFunction for OriginAsn {
                  not here).",
                 "Origin AS of an AS path, e.g. `origin_asn([7018,174,13335])` = 13335.",
                 "origin asn, origin as, route origin, last as, as_path, RPKI, hijack",
+                "AS-path analysis",
             ),
             ..Default::default()
         }
@@ -157,6 +159,7 @@ impl ScalarFunction for AsPathPrepends {
                  input is NULL.",
                 "Count of AS-path prepends, e.g. `as_path_prepends([1,1,1,2])` = 2.",
                 "as path prepends, prepending, padding, traffic engineering, as_path",
+                "AS-path analysis",
             ),
             ..Default::default()
         }
@@ -204,6 +207,7 @@ impl ScalarFunction for PathContains {
                 "Whether an AS path contains an ASN, e.g. \
                  `path_contains([7018,174,13335], 174)` = true.",
                 "path contains, traverses, transit as, through asn, as_path, leak detection",
+                "AS-path analysis",
             ),
             ..Default::default()
         }

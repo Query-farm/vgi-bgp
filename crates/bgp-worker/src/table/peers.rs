@@ -43,6 +43,7 @@ impl TableFunction for Peers {
              URL or a BLOB; `.gz`/`.bz2` auto-decompress.",
             "peers, collectors, vantage points, MRT, PEER_INDEX_TABLE, peer ASN, peer IP, \
              RouteViews, RIPE RIS, table function",
+            "MRT readers",
         );
         tags.push((
             "vgi.result_columns_md".into(),

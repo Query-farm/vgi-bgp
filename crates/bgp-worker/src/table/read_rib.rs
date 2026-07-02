@@ -42,6 +42,7 @@ impl TableFunction for ReadRib {
              BLOB; `.gz`/`.bz2` auto-decompress. Cast INET columns with `::INET` for containment.",
             "read rib, MRT, TABLE_DUMP_V2, RouteViews, RIPE RIS, routing table, BGP RIB, prefix, \
              AS path, origin ASN, next hop, communities, INET, route leak, hijack, table function",
+            "MRT readers",
         );
         tags.push((
             "vgi.result_columns_md".into(),

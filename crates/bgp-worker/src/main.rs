@@ -53,39 +53,42 @@ fn catalog_metadata(name: &str) -> CatalogModel {
             ),
             (
                 "vgi.doc_llm".to_string(),
-                "Decode MRT routing dumps directly in SQL. Scan a TABLE_DUMP_V2 RIB snapshot into \
-                 one row per (prefix, peer) entry with `read_rib`, a BGP4MP update stream into one \
-                 row per announce/withdraw/state-change with `read_updates`, and list the distinct \
-                 peers/collectors with `peers`. Each source argument is a path (local, a glob, an \
-                 `s3://` URL, or an `http(s)://` URL) or an inline BLOB of MRT bytes; gzip and \
-                 bzip2 archives are decompressed transparently. Prefixes, peer IPs, and next hops \
-                 are emitted in DuckDB's core INET physical layout (cast with `::INET`) so prefix \
-                 containment and joins against flow/geoip data work without parsing strings. AS \
-                 paths are LIST(UINTEGER) and communities are LIST(VARCHAR). AS-path helpers \
-                 (`path_length`, `origin_asn`, `as_path_prepends`, `path_contains`) and community \
-                 decoders (`community_parse`, `is_large_community`) operate on those columns. A \
-                 malformed MRT record yields a row with NULL fields and an `error` column rather \
-                 than aborting the scan (toggle `strict => true`) — MRT archives routinely end in \
-                 a truncated tail record. RPKI / route-origin validation is intentionally NOT \
-                 here: emit `origin_asn` and JOIN it against an RPKI/VRP table (ROV lives in \
-                 vgi-netflow)."
+                "Decode MRT routing dumps directly in SQL, skipping the usual ETL-to-Parquet step. \
+                 MRT is the archive format RouteViews and RIPE RIS publish: BGP4MP update streams \
+                 (announcements, withdrawals, and session state changes) and TABLE_DUMP_V2 RIB \
+                 snapshots (a full routing table captured at one instant). This worker streams \
+                 those archives into relational rows — one row per update message or per RIB \
+                 entry — and provides scalar helpers over the AS-path and BGP-community fields \
+                 those rows carry. A source argument accepts a local path, a glob, an `s3://` or \
+                 `http(s)://` URL, or an inline BLOB of MRT bytes; gzip and bzip2 archives are \
+                 decompressed transparently. Prefixes, peer IPs, and next hops are emitted in \
+                 DuckDB's core INET physical layout (cast with `::INET`) so prefix-containment \
+                 filters and joins against flow or geoip data work without parsing strings. AS \
+                 paths surface as LIST(UINTEGER) and communities as LIST(VARCHAR). A malformed MRT \
+                 record yields a row with NULL fields and an `error` column rather than aborting \
+                 the scan (toggle `strict => true`) — archives routinely end in a truncated tail \
+                 record. Reach for this worker for route-leak and prefix-hijack investigation, \
+                 RIB diffing between snapshots, and origin-AS analysis. List the schema to \
+                 discover the available functions and their signatures. RPKI / route-origin \
+                 validation is intentionally out of scope: emit the origin AS and JOIN it against \
+                 an RPKI/VRP table (ROV lives in vgi-netflow)."
                     .to_string(),
             ),
             (
                 "vgi.doc_md".to_string(),
-                "# bgp\n\nDecode **MRT** routing dumps (RouteViews / RIPE RIS archives — BGP4MP \
-                 updates and TABLE_DUMP_V2 RIB snapshots) into SQL rows, so route-leak / hijack / \
-                 RIB-diff analysis is a JOIN in the engine instead of an ETL-to-Parquet \
-                 step.\n\n**Table functions:** `read_rib(src)` (RIB entries), `read_updates(src)` \
-                 (announce / withdraw / state-change), and `peers(src)` (distinct \
-                 peers/collectors). `src` is a path (local / glob / `s3://` / `http(s)://`) or an \
-                 inline BLOB; `.gz`/`.bz2` auto-decompress.\n\n**Scalars:** `path_length`, \
-                 `origin_asn`, `as_path_prepends`, `path_contains` (over the `as_path` \
-                 LIST(UINTEGER) column); `community_parse`, `is_large_community` (over community \
-                 strings); and `bgp_version`.\n\nPrefixes / peer IPs / next hops are DuckDB **INET** \
-                 values (cast with `::INET`) so `prefix::INET <<= '203.0.113.0/24'` containment \
-                 and prefix joins work directly. RPKI / route-origin validation is out of scope — \
-                 JOIN `origin_asn` against your VRP table (ROV lives in vgi-netflow)."
+                "# bgp\n\nDecode **MRT** routing dumps — the archive format RouteViews and RIPE \
+                 RIS publish — directly in SQL. MRT comes in two flavors this worker reads: \
+                 **BGP4MP** update streams (announcements, withdrawals, and session state changes) \
+                 and **TABLE_DUMP_V2** RIB snapshots (a full routing table at one instant). \
+                 Streaming them into rows turns route-leak / hijack / RIB-diff analysis into a \
+                 JOIN in the engine instead of an ETL-to-Parquet step.\n\nA source argument is a \
+                 path (local / glob / `s3://` / `http(s)://`) or an inline BLOB; `.gz` / `.bz2` \
+                 inputs auto-decompress. Prefixes, peer IPs, and next hops are DuckDB **INET** \
+                 values (cast with `::INET`), so containment such as `prefix::INET <<= \
+                 '203.0.113.0/24'` and prefix joins work directly. AS paths are LIST(UINTEGER) and \
+                 BGP communities are LIST(VARCHAR); scalar helpers operate on those columns. List \
+                 the schema to see the individual functions. RPKI / route-origin validation is out \
+                 of scope — JOIN the origin AS against your VRP table (ROV lives in vgi-netflow)."
                     .to_string(),
             ),
             (
@@ -192,24 +195,36 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                 ("category".to_string(), "routing-and-bgp".to_string()),
                 ("topic".to_string(), "mrt-decoding".to_string()),
                 (
+                    // VGI413: the ordered category registry. Each object's
+                    // `vgi.category` tag names one of these.
+                    "vgi.categories".to_string(),
+                    r#"[
+  {"name":"MRT readers","description":"Table functions that stream MRT routing-dump archives — BGP4MP update streams and TABLE_DUMP_V2 RIB snapshots — into relational rows, with prefixes and peer IPs as DuckDB INET."},
+  {"name":"AS-path analysis","description":"Scalar helpers over the LIST(UINTEGER) AS-path column: path length, origin AS, prepend counting, and ASN membership tests."},
+  {"name":"BGP communities","description":"Scalar helpers that parse and classify standard and RFC 8092 large BGP community strings."},
+  {"name":"Worker info","description":"Diagnostic helpers, such as the worker build/version string."}
+]"#
+                    .to_string(),
+                ),
+                (
                     "vgi.doc_llm".to_string(),
-                    "Functions for MRT routing dumps: scan a TABLE_DUMP_V2 RIB into rows \
-                     (`read_rib`), a BGP4MP update stream into rows (`read_updates`), list distinct \
-                     peers (`peers`), and the AS-path (`path_length`, `origin_asn`, \
-                     `as_path_prepends`, `path_contains`) and community (`community_parse`, \
-                     `is_large_community`) helpers, plus `bgp_version`. read_rib/read_updates emit \
-                     prefix / peer_ip / next_hop as DuckDB INET (cast `::INET`), as_path as \
-                     LIST(UINTEGER), communities as LIST(VARCHAR)."
+                    "The single schema for the `bgp` worker — the catalog name matches the ATTACH \
+                     name, so calls qualify as `bgp.main.<fn>(...)`. It groups two kinds of \
+                     objects: table functions that stream MRT archives (BGP4MP update streams and \
+                     TABLE_DUMP_V2 RIB snapshots) into rows, and scalar helpers that operate on \
+                     the AS-path and BGP-community columns those rows expose. Table-function \
+                     output carries prefix / peer_ip / next_hop as DuckDB INET (cast `::INET`), \
+                     the AS path as LIST(UINTEGER), and communities as LIST(VARCHAR). List the \
+                     schema to discover the individual functions and their signatures."
                         .to_string(),
                 ),
                 (
                     "vgi.doc_md".to_string(),
                     "The single schema for the `bgp` worker — the catalog name matches the ATTACH \
-                     name, so qualify calls as `bgp.main.<fn>(...)`. It holds the MRT table \
-                     functions `read_rib`, `read_updates`, and `peers`, the AS-path scalars \
-                     `path_length` / `origin_asn` / `as_path_prepends` / `path_contains`, the \
-                     community scalars `community_parse` / `is_large_community`, and \
-                     `bgp_version`."
+                     name, so qualify calls as `bgp.main.<fn>(...)`. It holds table functions that \
+                     stream MRT archives (BGP4MP update streams and TABLE_DUMP_V2 RIB snapshots) \
+                     into rows, plus scalar helpers over the AS-path and BGP-community columns \
+                     those rows carry. List the schema to see each function and its arguments."
                         .to_string(),
                 ),
                 (

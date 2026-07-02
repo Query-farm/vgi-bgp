@@ -44,6 +44,7 @@ impl TableFunction for ReadUpdates {
              columns with `::INET` for containment.",
             "read updates, MRT, BGP4MP, RouteViews, RIPE RIS, announcement, withdrawal, state \
              change, prefix, AS path, communities, INET, RIB churn, route leak, table function",
+            "MRT readers",
         );
         tags.push((
             "vgi.result_columns_md".into(),
