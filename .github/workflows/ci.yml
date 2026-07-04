@@ -142,11 +142,7 @@ jobs:
           # RUSTSEC-2026-0173: `proc-macro-error2` unmaintained. Pulled only via
           #   jiff's OPTIONAL `defmt` feature, which we do not enable — it is in
           #   Cargo.lock but never compiled into the worker.
-          ignore: |
-            RUSTSEC-2025-0141
-            RUSTSEC-2026-0194
-            RUSTSEC-2026-0195
-            RUSTSEC-2026-0173
+          ignore: RUSTSEC-2025-0141,RUSTSEC-2026-0194,RUSTSEC-2026-0195,RUSTSEC-2026-0173
 
   msrv:
     name: MSRV check (rust 1.90)
