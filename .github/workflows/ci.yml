@@ -112,6 +112,12 @@ jobs:
   audit:
     name: supply-chain audit (cargo-audit)
     runs-on: ubuntu-latest
+    # rustsec/audit-check posts its results as a check-run; that needs
+    # `checks: write`. Without an explicit block the token is read-only and the
+    # action dies with "Resource not accessible by integration … create-a-check-run".
+    permissions:
+      contents: read
+      checks: write
     steps:
       - uses: actions/checkout@v4
 
@@ -119,11 +125,28 @@ jobs:
         uses: rustsec/audit-check@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # RUSTSEC-2025-0141: `bincode 1.3.3` is flagged *unmaintained* (not
-          # vulnerable — 1.3.3 was declared complete). It is a transitive dep we
-          # don't pull directly, so ignore this informational advisory; real
-          # vulnerabilities still fail the job.
-          ignore: RUSTSEC-2025-0141
+          # Comma/newline-separated advisory ids to ignore (all transitive, none
+          # reachable/exploitable here); real vulns in our own deps still fail.
+          #
+          # RUSTSEC-2025-0141: `bincode 1.3.3` flagged *unmaintained* (not
+          #   vulnerable — 1.3.3 was declared complete). Transitive, not pulled
+          #   directly.
+          # RUSTSEC-2026-0194 / RUSTSEC-2026-0195: quick-xml < 0.41.0 DoS
+          #   (quadratic attribute check / unbounded namespace alloc). Reached
+          #   only transitively via object_store's `aws` feature to parse S3 API
+          #   responses from the configured object store — not arbitrary
+          #   untrusted XML. The patched quick-xml >= 0.41.0 is not yet available
+          #   through any object_store release (latest 0.14.0 still pins
+          #   quick-xml ^0.40.1), so this is deferred until object_store ships a
+          #   0.41-compatible line. https://rustsec.org/advisories/RUSTSEC-2026-0194
+          # RUSTSEC-2026-0173: `proc-macro-error2` unmaintained. Pulled only via
+          #   jiff's OPTIONAL `defmt` feature, which we do not enable — it is in
+          #   Cargo.lock but never compiled into the worker.
+          ignore: |
+            RUSTSEC-2025-0141
+            RUSTSEC-2026-0194
+            RUSTSEC-2026-0195
+            RUSTSEC-2026-0173
 
   msrv:
     name: MSRV check (rust 1.90)
