@@ -410,15 +410,15 @@ dependencies = [
 
 [[package]]
 name = "bgpkit-parser"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d116abb02b510d8c97a5e62929bc2293f541dc97786083f6c61b1ca2027ce791"
+checksum = "69d67aa5093677071e8e702b469dba28f20f47ce703f600357e3f01dbb82f67a"
 dependencies = [
  "bitflags 2.13.0",
  "bytes",
  "chrono",
  "ipnet",
- "itertools",
+ "itertools 0.15.0",
  "log",
  "num_enum",
  "regex",
@@ -1322,6 +1322,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1638,7 +1647,7 @@ dependencies = [
  "http-body-util",
  "humantime",
  "hyper",
- "itertools",
+ "itertools 0.14.0",
  "md-5",
  "parking_lot",
  "percent-encoding",
