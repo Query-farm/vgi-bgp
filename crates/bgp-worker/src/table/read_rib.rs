@@ -44,17 +44,25 @@ impl TableFunction for ReadRib {
              AS path, origin ASN, next hop, communities, INET, route leak, hijack, table function",
             "MRT readers",
         );
+        let inet = crate::meta::INET_STRUCT_TYPE;
         tags.push((
-            "vgi.result_columns_md".into(),
-            "One row per (prefix, peer) RIB entry:\n\n\
-             | column | type |\n|---|---|\n\
-             | timestamp | TIMESTAMP |\n| view_name | VARCHAR |\n\
-             | peer_ip | INET-struct (cast `::INET`) |\n| peer_asn | UINTEGER |\n\
-             | prefix | INET-struct (cast `::INET`) |\n| as_path | UINTEGER[] |\n\
-             | origin_asn | UINTEGER |\n| next_hop | INET-struct (cast `::INET`) |\n\
-             | communities | VARCHAR[] |\n| med | UINTEGER |\n| local_pref | UINTEGER |\n\
-             | atomic_aggregate | BOOLEAN |\n| aggregator_asn | UINTEGER |\n| error | VARCHAR |"
-                .into(),
+            "vgi.result_columns_schema".into(),
+            crate::meta::result_columns_schema_json(&[
+                ("timestamp", "TIMESTAMP", "Route timestamp from the MRT record header — when this RIB entry was captured."),
+                ("view_name", "VARCHAR", "The RIB view / collector name from the TABLE_DUMP_V2 PEER_INDEX_TABLE."),
+                ("peer_ip", inet, "The reporting peer's IP address in DuckDB's INET physical layout; cast `::INET`."),
+                ("peer_asn", "UINTEGER", "The reporting peer's autonomous-system number."),
+                ("prefix", inet, "The announced prefix in DuckDB's INET physical layout; cast `::INET` for containment tests (`<<=` / `>>=`)."),
+                ("as_path", "UINTEGER[]", "The AS path in path order — the origin AS that announced the prefix is last."),
+                ("origin_asn", "UINTEGER", "The origin AS (last ASN in as_path) that announced the prefix."),
+                ("next_hop", inet, "The BGP next-hop address in DuckDB's INET physical layout; cast `::INET`."),
+                ("communities", "VARCHAR[]", "BGP communities as strings — standard `asn:value` and RFC 8092 large `global:data1:data2`."),
+                ("med", "UINTEGER", "The MULTI_EXIT_DISC (MED) attribute, or NULL when the route carries none."),
+                ("local_pref", "UINTEGER", "The LOCAL_PREF attribute, or NULL when the route carries none."),
+                ("atomic_aggregate", "BOOLEAN", "Whether the ATOMIC_AGGREGATE attribute is set on the route."),
+                ("aggregator_asn", "UINTEGER", "The AS that formed an aggregate route (AGGREGATOR attribute), or NULL."),
+                ("error", "VARCHAR", "Decode error for a malformed record (all other columns NULL); NULL on a clean row. A malformed record instead aborts the scan when `strict => true`."),
+            ]),
         ));
         FunctionMetadata {
             description: "Read an MRT TABLE_DUMP_V2 RIB snapshot into rows".into(),

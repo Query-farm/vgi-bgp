@@ -63,6 +63,56 @@ pub fn agent_test_tasks_json(tasks: &[(&str, &str, &str)]) -> String {
     format!("[{}]", items.join(","))
 }
 
+/// The DuckDB type string of a prefix / peer_ip / next_hop column. A worker
+/// emits DuckDB's core `INET` over Arrow as this struct (DuckDB does not
+/// round-trip the logical `INET` through Arrow), so `DESCRIBE` reports exactly
+/// this — and `vgi.result_columns_schema` must declare it verbatim (VGI910).
+/// Cast the column with `::INET` to recover a native `INET`.
+pub const INET_STRUCT_TYPE: &str = "STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)";
+
+/// Build a `vgi.result_columns_schema` JSON value (VGI307/VGI321): a JSON array
+/// of `{name, type, description}` objects, one per result column, in output
+/// order. Each `type` must be a real DuckDB type so it matches the function's
+/// live `DESCRIBE` output (VGI322 / VGI910), and each description must be
+/// non-blank (VGI323).
+pub fn result_columns_schema_json(cols: &[(&str, &str, &str)]) -> String {
+    fn esc(s: &str) -> String {
+        s.replace('\\', "\\\\").replace('"', "\\\"")
+    }
+    let items: Vec<String> = cols
+        .iter()
+        .map(|(name, ty, desc)| {
+            format!(
+                "{{\"name\":\"{}\",\"type\":\"{}\",\"description\":\"{}\"}}",
+                esc(name),
+                esc(ty),
+                esc(desc)
+            )
+        })
+        .collect();
+    format!("[{}]", items.join(","))
+}
+
+/// Build a `vgi.example_queries` JSON value: a JSON array of `{description, sql}`
+/// objects (VGI502/VGI503). Object-level example_queries (on a table/view/
+/// function) MUST be this JSON shape — a bare SQL string is rejected.
+pub fn example_queries_json(examples: &[(&str, &str)]) -> String {
+    fn esc(s: &str) -> String {
+        s.replace('\\', "\\\\").replace('"', "\\\"")
+    }
+    let items: Vec<String> = examples
+        .iter()
+        .map(|(desc, sql)| {
+            format!(
+                "{{\"description\":\"{}\",\"sql\":\"{}\"}}",
+                esc(desc),
+                esc(sql)
+            )
+        })
+        .collect();
+    format!("[{}]", items.join(","))
+}
+
 /// Build the standard per-object discovery/description tags
 /// (`vgi.title`, `vgi.doc_llm`, `vgi.doc_md`, `vgi.keywords`, `vgi.category`).
 ///

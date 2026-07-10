@@ -11,7 +11,7 @@ description = "Pure-compute MRT (TABLE_DUMP_V2 / BGP4MP) decode → row structs 
 # MRT / BGP4MP / TABLE_DUMP_V2 decode (MIT). Only the `parser` feature: no oneio
 # (remote fetch — the worker does its own object_store I/O) and no RPKI (ROV
 # belongs in vgi-netflow). bgpkit re-exports ipnet, which models prefixes.
-bgpkit-parser = { version = "0.17", default-features = false, features = ["parser"] }
+bgpkit-parser = { version = "0.18", default-features = false, features = ["parser"] }
 ipnet = "2"
 # Transparent input decompression of MRT archives. gzip via flate2; bzip2 via the
 # pure-Rust bzip2-rs decoder (no libbz2 C dependency) — RouteViews ships `.bz2`,

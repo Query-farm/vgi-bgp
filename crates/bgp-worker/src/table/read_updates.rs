@@ -46,17 +46,23 @@ impl TableFunction for ReadUpdates {
              change, prefix, AS path, communities, INET, RIB churn, route leak, table function",
             "MRT readers",
         );
+        let inet = crate::meta::INET_STRUCT_TYPE;
         tags.push((
-            "vgi.result_columns_md".into(),
-            "One row per BGP message:\n\n\
-             | column | type |\n|---|---|\n\
-             | timestamp | TIMESTAMP |\n| peer_ip | INET-struct (cast `::INET`) |\n\
-             | peer_asn | UINTEGER |\n| message_type | VARCHAR |\n\
-             | prefix | INET-struct (cast `::INET`) |\n| as_path | UINTEGER[] |\n\
-             | origin_asn | UINTEGER |\n| next_hop | INET-struct (cast `::INET`) |\n\
-             | communities | VARCHAR[] |\n| old_state | USMALLINT |\n| new_state | USMALLINT |\n\
-             | error | VARCHAR |"
-                .into(),
+            "vgi.result_columns_schema".into(),
+            crate::meta::result_columns_schema_json(&[
+                ("timestamp", "TIMESTAMP", "Message timestamp from the MRT record header."),
+                ("peer_ip", inet, "The reporting peer's IP address in DuckDB's INET physical layout; cast `::INET`."),
+                ("peer_asn", "UINTEGER", "The reporting peer's autonomous-system number."),
+                ("message_type", "VARCHAR", "The message kind: 'announce', 'withdraw', or 'state_change'."),
+                ("prefix", inet, "The announced or withdrawn prefix in DuckDB's INET physical layout; cast `::INET`. NULL for a state_change message."),
+                ("as_path", "UINTEGER[]", "The AS path (origin AS last) for an announcement; NULL for a withdrawal or state change."),
+                ("origin_asn", "UINTEGER", "The origin AS (last ASN in as_path) for an announcement; NULL otherwise."),
+                ("next_hop", inet, "The BGP next-hop address for an announcement in DuckDB's INET physical layout; cast `::INET`."),
+                ("communities", "VARCHAR[]", "BGP communities as strings (standard `asn:value` and RFC 8092 large) for an announcement."),
+                ("old_state", "USMALLINT", "The prior BGP FSM state for a state_change message; NULL otherwise."),
+                ("new_state", "USMALLINT", "The new BGP FSM state for a state_change message; NULL otherwise."),
+                ("error", "VARCHAR", "Decode error for a malformed record (all other columns NULL); NULL on a clean row. A malformed record instead aborts the scan when `strict => true`."),
+            ]),
         ));
         FunctionMetadata {
             description: "Read an MRT BGP4MP update stream into rows".into(),

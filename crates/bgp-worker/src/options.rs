@@ -120,17 +120,26 @@ pub fn cloud_overrides(args: &Arguments) -> Vec<(String, String)> {
     out
 }
 
-/// The shared named-argument specs: `strict` plus the `s3://` overrides.
+/// The shared named-argument specs: `strict` plus the `s3://` overrides. Used by
+/// read_rib / read_updates, which capture per-record errors and honor `strict`.
 pub fn common_arg_specs() -> Vec<ArgSpec> {
+    let mut specs = vec![ArgSpec::const_arg(
+        "strict",
+        -1,
+        "boolean",
+        "When true, a malformed MRT record aborts the scan with an error. When false (the \
+         default), each bad record yields a row with NULL fields and a populated `error` \
+         column, so a truncated tail record never crashes the query.",
+    )];
+    specs.extend(cloud_arg_specs());
+    specs
+}
+
+/// The `s3://` object-store override specs (`endpoint`, `region`, `url_style`,
+/// `use_ssl`) shared by every source function — including `peers`, which has no
+/// `strict` option.
+pub fn cloud_arg_specs() -> Vec<ArgSpec> {
     vec![
-        ArgSpec::const_arg(
-            "strict",
-            -1,
-            "boolean",
-            "When true, a malformed MRT record aborts the scan with an error. When false (the \
-             default), each bad record yields a row with NULL fields and a populated `error` \
-             column, so a truncated tail record never crashes the query.",
-        ),
         ArgSpec::const_arg(
             "endpoint",
             -1,

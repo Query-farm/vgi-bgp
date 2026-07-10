@@ -32,26 +32,41 @@ impl TableFunction for Peers {
             "List MRT Peers / Collectors",
             "List the distinct BGP peers in an MRT file: one row per (peer_ip, peer_asn, \
              collector) triple. For a TABLE_DUMP_V2 RIB it returns every peer in the \
-             PEER_INDEX_TABLE (with the RIB view name as the collector); for a BGP4MP update \
-             stream it returns each distinct peer that produced a message. `src` is a path \
-             (local, glob, `s3://`, or `http(s)://`) or an inline BLOB of MRT bytes; `.gz`/`.bz2` \
-             auto-decompress. peer_ip is a DuckDB INET value (cast with `::INET`). Use it to \
-             enumerate vantage points before scanning a dump, or to join peer ASNs against \
-             attribution data.",
-            "List the distinct peers in an MRT file: peer_ip (INET), peer_asn, and collector \
-             (the RIB view name when present). `src` is a path / glob / `s3://` / `http(s)://` \
-             URL or a BLOB; `.gz`/`.bz2` auto-decompress.",
+             PEER_INDEX_TABLE, with the RIB view name as the `collector`; for a BGP4MP update \
+             stream it returns each distinct peer that produced a message, and `collector` is \
+             NULL (a raw update stream carries no collector name). Unlike read_rib / read_updates \
+             this function never emits an `error` column and takes no `strict` option — a torn or \
+             truncated tail simply ends the enumeration. `src` is a path (local, glob, `s3://`, or \
+             `http(s)://`) or an inline BLOB of MRT bytes; `.gz`/`.bz2` auto-decompress. peer_ip \
+             is a DuckDB INET value (cast with `::INET`). Use it to enumerate vantage points \
+             before scanning a dump, or to join peer ASNs against attribution data.",
+            "List the distinct peers in an MRT file: peer_ip (INET), peer_asn, and collector (the \
+             RIB view name for a TABLE_DUMP_V2 RIB, NULL for a BGP4MP update stream). `src` is a \
+             path / glob / `s3://` / `http(s)://` URL or a BLOB; `.gz`/`.bz2` auto-decompress.",
             "peers, collectors, vantage points, MRT, PEER_INDEX_TABLE, peer ASN, peer IP, \
              RouteViews, RIPE RIS, table function",
             "MRT readers",
         );
         tags.push((
-            "vgi.result_columns_md".into(),
-            "One row per distinct peer:\n\n\
-             | column | type |\n|---|---|\n\
-             | peer_ip | INET-struct (cast `::INET`) |\n| peer_asn | UINTEGER |\n\
-             | collector | VARCHAR |"
-                .into(),
+            "vgi.result_columns_schema".into(),
+            crate::meta::result_columns_schema_json(&[
+                (
+                    "peer_ip",
+                    crate::meta::INET_STRUCT_TYPE,
+                    "The peer's IP address in DuckDB's INET physical layout; cast `::INET`.",
+                ),
+                (
+                    "peer_asn",
+                    "UINTEGER",
+                    "The peer's autonomous-system number.",
+                ),
+                (
+                    "collector",
+                    "VARCHAR",
+                    "The RIB view name (TABLE_DUMP_V2 PEER_INDEX_TABLE); NULL for a BGP4MP update \
+                     stream, which carries no collector name.",
+                ),
+            ]),
         ));
         FunctionMetadata {
             description: "List the distinct peers / collectors in an MRT file".into(),
@@ -77,7 +92,9 @@ impl TableFunction for Peers {
              `https://host/file`), several such paths in a list, or inline MRT bytes. \
              gzip/bzip2 archives are decompressed automatically.",
         )];
-        specs.extend(options::common_arg_specs());
+        // peers takes no `strict` option (it emits no `error` column) — only the
+        // shared `s3://` object-store overrides.
+        specs.extend(options::cloud_arg_specs());
         specs
     }
 
