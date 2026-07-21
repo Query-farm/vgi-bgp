@@ -1,0 +1,15 @@
+# Keep the build context small: the Dockerfile only needs Cargo manifests +
+# crates/ sources. Everything below is rebuilt inside the image or irrelevant
+# (the data/*.mrt fixtures are test-only — the runtime image never reads them).
+/target
+**/target
+/build
+.git
+.github
+.gitignore
+data
+test
+docs
+duckdb_unittest_tempdir
+**/*.rs.bk
+.DS_Store

@@ -1,0 +1,130 @@
+# Copyright 2026 Query Farm LLC - https://query.farm
+#
+# Build and publish the multi-arch vgi-bgp image to ghcr.io. The heavy lifting
+# (multi-arch build -> per-arch /health boot smoke -> image SQL suite -> push ->
+# manifest -> cosign-sign) lives in the shared reusable workflow
+# Query-farm/vgi-actions; this file gates on the repo's own test suite and
+# supplies the worker-specific inputs.
+#
+# Tag-driven: vX.Y.Z -> :X.Y.Z/:X.Y/:latest, push to main -> :edge. Publishing a
+# GitHub Release creates the tag, which fires this too.
+name: Publish image to ghcr.io
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Gate every image on the full unit + vgi-extension integration suite, so a
+  # broken worker is never imaged.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: [ci]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    uses: Query-farm/vgi-actions/.github/workflows/docker-publish.yml@v1
+    secrets: inherit
+    with:
+      image_name: vgi-bgp
+      # Rust binary — nothing to `import`, so the language-import smoke is skipped.
+      # The reusable workflow still runs its dual-arch HTTP /health boot smoke.
+      smoke_import: ""
+      health_port: "8000"
+      version_check_cmd: "ci/check-version.sh"
+      # Validate the built image's transports against the signed vgi extension.
+      # The worker *logic* is already exercised every run by the gating `ci` job
+      # (all test/sql/*, subprocess transport, via ./run_tests.sh), so here we
+      # only prove the IMAGE's entrypoints speak the protocol end to end:
+      #   - stdio: smoke the file-free scalars suite through `docker run … stdio`
+      #            (the on-host spawn mode DuckDB uses);
+      #   - HTTP : the FULL test/sql suite against a SINGLE warm container via the
+      #            default `http` entrypoint + /health.
+      #
+      # bgp specifics (vs the stateless vgi-units template):
+      #   * The .test files decode `data/*.mrt` fixtures, which the worker reads
+      #     from ITS filesystem — so the warm HTTP container bind-mounts the
+      #     checked-out `data/` read-only at /app/data (the worker's WORKDIR).
+      #   * The HTTP transport's client is built on DuckDB's `httpfs`, so we run
+      #     the suite over STAGED copies of the .test files with `LOAD httpfs;`
+      #     injected after each `LOAD vgi;` (without it the HTTP ATTACH fails with
+      #     an "HTTP"-matching error the sqllogict runner SILENTLY skips — a skip
+      #     is not a pass, so we also fail on any "skipped").
+      #   * scan_state.test require-env's VGI_BGP_BATCH_ROWS and needs the worker
+      #     to emit one row per batch, so the container gets `-e VGI_BGP_BATCH_ROWS=1`
+      #     and the runner env carries it too.
+      # $CITEST_IMAGE is the loaded <image>:citest-amd64 ref; GH_TOKEN is provided.
+      image_test: |
+        set -euo pipefail
+
+        echo "::group::download haybarn-unittest"
+        REL=$(gh release view --repo Query-farm-haybarn/haybarn --json tagName --jq .tagName)
+        gh release download "$REL" --repo Query-farm-haybarn/haybarn \
+          --pattern 'haybarn_unittest-linux-amd64.zip' --output hb.zip --clobber
+        mkdir -p hb && unzip -o -q hb.zip -d hb
+        HB="$PWD/$(find hb -name 'haybarn-unittest' -type f | head -1)"
+        chmod +x "$HB"
+        echo "::endgroup::"
+
+        echo "::group::warm extensions (vgi from community + inet + httpfs)"
+        cat > _warm.test <<'WARM'
+        # name: _warm.test
+        # group: [warm]
+        statement ok
+        INSTALL vgi FROM community;
+
+        statement ok
+        INSTALL inet;
+
+        statement ok
+        INSTALL httpfs;
+        WARM
+        "$HB" --test-dir "$PWD" _warm.test || echo "::warning::extension warm step did not fully succeed"
+        rm -f _warm.test
+        echo "::endgroup::"
+
+        echo "::group::stdio entrypoint smoke (scalars.test — file-free, cold container per ATTACH)"
+        VGI_BGP_WORKER="docker run -i --rm $CITEST_IMAGE stdio" \
+          "$HB" --test-dir "$PWD" test/sql/scalars.test
+        echo "::endgroup::"
+
+        echo "::group::full SQL suite — HTTP transport (one warm container)"
+        CID=$(docker run -d -p 18000:8000 -e VGI_BGP_BATCH_ROWS=1 \
+                -v "$PWD/data:/app/data:ro" "$CITEST_IMAGE")
+        trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT
+        for _ in $(seq 1 30); do curl -fsS -o /dev/null http://localhost:18000/health && break; sleep 1; done
+        # Stage the .test files with `LOAD httpfs;` injected after each `LOAD vgi;`
+        # (the vgi extension's HTTP client rides on httpfs). The worker reads the
+        # data/*.mrt fixtures from the container's bind-mounted /app/data.
+        rm -rf staged && mkdir -p staged/test/sql
+        for f in test/sql/*.test; do
+          awk '{print} /^LOAD vgi;$/{print "\nstatement ok\nLOAD httpfs;"}' "$f" \
+            > "staged/test/sql/$(basename "$f")"
+        done
+        REPORT="$(mktemp)"
+        set +e
+        VGI_BGP_WORKER="http://localhost:18000" VGI_BGP_BATCH_ROWS=1 \
+          "$HB" --test-dir "$PWD/staged" 'test/sql/*' 2>&1 | tee "$REPORT"
+        status="${PIPESTATUS[0]}"
+        set -e
+        # A skip is NOT a pass: a broken HTTP ATTACH errors with an "HTTP"-matching
+        # message the runner silently ignores, which would otherwise look green.
+        if grep -qiE "All tests were skipped|total skipped [1-9]" "$REPORT"; then
+          echo "ERROR: tests were SKIPPED (an ATTACH/transport error the runner auto-ignored) — not a pass." >&2
+          exit 1
+        fi
+        exit "$status"
+        echo "::endgroup::"
