@@ -37,12 +37,12 @@ impl TableFunction for Peers {
              NULL (a raw update stream carries no collector name). Unlike read_rib / read_updates \
              this function never emits an `error` column and takes no `strict` option — a torn or \
              truncated tail simply ends the enumeration. `src` is a path (local, glob, `s3://`, or \
-             `http(s)://`) or an inline BLOB of MRT bytes; `.gz`/`.bz2` auto-decompress. peer_ip \
+             `http(s)://`) or an inline `BLOB` of MRT bytes; `.gz`/`.bz2` auto-decompress. peer_ip \
              is a DuckDB INET value (cast with `::INET`). Use it to enumerate vantage points \
              before scanning a dump, or to join peer ASNs against attribution data.",
             "List the distinct peers in an MRT file: peer_ip (INET), peer_asn, and collector (the \
              RIB view name for a TABLE_DUMP_V2 RIB, NULL for a BGP4MP update stream). `src` is a \
-             path / glob / `s3://` / `http(s)://` URL or a BLOB; `.gz`/`.bz2` auto-decompress.",
+             path / glob / `s3://` / `http(s)://` URL or a `BLOB`; `.gz`/`.bz2` auto-decompress.",
             "peers, collectors, vantage points, MRT, PEER_INDEX_TABLE, peer ASN, peer IP, \
              RouteViews, RIPE RIS, table function",
             "MRT readers",
@@ -67,6 +67,18 @@ impl TableFunction for Peers {
                      stream, which carries no collector name.",
                 ),
             ]),
+        ));
+        // VGI515: re-declare the example with a description (the native carrier
+        // drops it); dedup keeps this copy over the bare native one.
+        tags.push((
+            "vgi.example_queries".into(),
+            crate::meta::example_queries_json(&[(
+                "List the peers in an inline TABLE_DUMP_V2 PEER_INDEX_TABLE.",
+                &format!(
+                    "SELECT peer_asn, collector FROM bgp.main.peers(from_hex('{}'));",
+                    crate::meta::RIB_MRT_HEX
+                ),
+            )]),
         ));
         FunctionMetadata {
             description: "List the distinct peers / collectors in an MRT file".into(),

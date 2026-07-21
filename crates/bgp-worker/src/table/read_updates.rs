@@ -26,11 +26,11 @@ impl TableFunction for ReadUpdates {
             "Scan an MRT BGP4MP update stream (a RouteViews / RIPE RIS `updates.*` archive) into \
              one row per BGP message: a prefix announcement, a withdrawal, or an FSM state change. \
              `src` is a path — local, a glob, an `s3://` URL, or an `http(s)://` URL — or an \
-             inline BLOB of MRT bytes; gzip (`.gz`) and bzip2 (`.bz2`) inputs are decompressed \
+             inline `BLOB` of MRT bytes; gzip (`.gz`) and bzip2 (`.bz2`) inputs are decompressed \
              transparently. Each row carries the timestamp, the reporting peer (peer_ip INET, \
              peer_asn), the message_type ('announce' / 'withdraw' / 'state_change'), the prefix \
-             (INET), AS path (LIST(UINTEGER)), origin ASN, next hop (INET), communities \
-             (LIST(VARCHAR)), and — for state changes — old_state and new_state. prefix / peer_ip \
+             (INET), AS path (`LIST(UINTEGER)`), origin ASN, next hop (INET), communities \
+             (`LIST(VARCHAR)`), and — for state changes — old_state and new_state. prefix / peer_ip \
              / next_hop are DuckDB INET values (cast with `::INET`) so containment and prefix \
              joins work without parsing strings. Announcements and withdrawals stay in one stream \
              so RIB churn can be reconstructed over time. A malformed record yields a row with \
@@ -38,9 +38,9 @@ impl TableFunction for ReadUpdates {
              update-stream counterpart of read_rib.",
             "Scan an MRT BGP4MP update stream into rows: timestamp, peer_ip (INET), peer_asn, \
              message_type (announce/withdraw/state_change), prefix (INET), as_path \
-             (LIST(UINTEGER)), origin_asn, next_hop (INET), communities (LIST(VARCHAR)), \
+             (`LIST(UINTEGER)`), origin_asn, next_hop (INET), communities (`LIST(VARCHAR)`), \
              old_state, new_state, and an `error` capture column. `src` is a path / glob / \
-             `s3://` / `http(s)://` URL or a BLOB; `.gz`/`.bz2` auto-decompress. Cast INET \
+             `s3://` / `http(s)://` URL or a `BLOB`; `.gz`/`.bz2` auto-decompress. Cast INET \
              columns with `::INET` for containment.",
             "read updates, MRT, BGP4MP, RouteViews, RIPE RIS, announcement, withdrawal, state \
              change, prefix, AS path, communities, INET, RIB churn, route leak, table function",
@@ -63,6 +63,20 @@ impl TableFunction for ReadUpdates {
                 ("new_state", "USMALLINT", "The new BGP FSM state for a state_change message; NULL otherwise."),
                 ("error", "VARCHAR", "Decode error for a malformed record (all other columns NULL); NULL on a clean row. A malformed record instead aborts the scan when `strict => true`."),
             ]),
+        ));
+        // VGI515: re-declare the example with a description (the native carrier
+        // drops it); dedup keeps this copy over the bare native one.
+        tags.push((
+            "vgi.example_queries".into(),
+            crate::meta::example_queries_json(&[(
+                "Count announce / withdraw / state-change messages in an inline BGP4MP update \
+                 stream.",
+                &format!(
+                    "SELECT message_type, count(*) FROM bgp.main.read_updates(from_hex('{}')) \
+                     GROUP BY 1;",
+                    crate::meta::UPD_MRT_HEX
+                ),
+            )]),
         ));
         FunctionMetadata {
             description: "Read an MRT BGP4MP update stream into rows".into(),

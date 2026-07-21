@@ -1,5 +1,5 @@
 # name: test/sql/scalars.test
-# description: AS-path and community helper scalars + version (no files needed).
+# description: AS-path and community helper scalars (no files needed).
 # group: [sql]
 
 require-env VGI_BGP_WORKER
@@ -12,12 +12,6 @@ ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION '${VGI_BGP_WORKER}');
 
 statement ok
 SET search_path='bgp.main';
-
-# Version is a non-empty semver string.
-query I
-SELECT regexp_full_match(bgp_version(), '\d+\.\d+\.\d+')::INT;
-----
-1
 
 # path_length counts AS hops.
 query I

@@ -60,18 +60,17 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  those archives into relational rows — one row per update message or per RIB \
                  entry — and provides scalar helpers over the AS-path and BGP-community fields \
                  those rows carry. A source argument accepts a local path, a glob, an `s3://` or \
-                 `http(s)://` URL, or an inline BLOB of MRT bytes; gzip and bzip2 archives are \
+                 `http(s)://` URL, or an inline `BLOB` of MRT bytes; gzip and bzip2 archives are \
                  decompressed transparently. Prefixes, peer IPs, and next hops are emitted in \
                  DuckDB's core INET physical layout (cast with `::INET`) so prefix-containment \
                  filters and joins against flow or geoip data work without parsing strings. AS \
-                 paths surface as LIST(UINTEGER) and communities as LIST(VARCHAR). A malformed MRT \
-                 record yields a row with NULL fields and an `error` column rather than aborting \
-                 the scan (toggle `strict => true`) — archives routinely end in a truncated tail \
-                 record. Reach for this worker for route-leak and prefix-hijack investigation, \
-                 RIB diffing between snapshots, and origin-AS analysis. List the schema to \
-                 discover the available functions and their signatures. RPKI / route-origin \
-                 validation is intentionally out of scope: emit the origin AS and JOIN it against \
-                 an RPKI/VRP table (ROV lives in vgi-netflow)."
+                 paths surface as `LIST(UINTEGER)` and communities as `LIST(VARCHAR)`. A malformed \
+                 MRT record yields a row with NULL fields and an `error` column rather than \
+                 aborting the scan (toggle `strict => true`) — archives routinely end in a \
+                 truncated tail record. Reach for this worker for route-leak and prefix-hijack \
+                 investigation, RIB diffing between snapshots, and origin-AS analysis. RPKI / \
+                 route-origin validation is intentionally out of scope: emit the origin AS and \
+                 JOIN it against an RPKI/VRP table (ROV lives in vgi-netflow)."
                     .to_string(),
             ),
             (
@@ -82,25 +81,18 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  and **TABLE_DUMP_V2** RIB snapshots (a full routing table at one instant). \
                  Streaming them into rows turns route-leak / hijack / RIB-diff analysis into a \
                  JOIN in the engine instead of an ETL-to-Parquet step.\n\nA source argument is a \
-                 path (local / glob / `s3://` / `http(s)://`) or an inline BLOB; `.gz` / `.bz2` \
+                 path (local / glob / `s3://` / `http(s)://`) or an inline `BLOB`; `.gz` / `.bz2` \
                  inputs auto-decompress. Prefixes, peer IPs, and next hops are DuckDB **INET** \
                  values (cast with `::INET`), so containment such as `prefix::INET <<= \
-                 '203.0.113.0/24'` and prefix joins work directly. AS paths are LIST(UINTEGER) and \
-                 BGP communities are LIST(VARCHAR); scalar helpers operate on those columns. List \
-                 the schema to see the individual functions. RPKI / route-origin validation is out \
-                 of scope — JOIN the origin AS against your VRP table (ROV lives in vgi-netflow)."
+                 '203.0.113.0/24'` and prefix joins work directly. AS paths are `LIST(UINTEGER)` \
+                 and BGP communities are `LIST(VARCHAR)`; scalar helpers operate on those columns. \
+                 RPKI / route-origin validation is out of scope — JOIN the origin AS against your \
+                 VRP table (ROV lives in vgi-netflow)."
                     .to_string(),
             ),
             (
                 "vgi.agent_test_tasks".to_string(),
                 crate::meta::agent_test_tasks_json(&[
-                    (
-                        "version",
-                        "Before relying on the bgp worker in a pipeline, an analyst wants to record \
-                         which build is attached. Return the worker's version string as a single \
-                         row with one column named version.",
-                        "SELECT bgp.main.bgp_version() AS version",
-                    ),
                     (
                         "path_hops",
                         "Given the AS path [7018, 174, 174, 13335], return the number of AS hops as \
@@ -185,8 +177,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                 // A real deployment passes a path or URL, e.g.
                 // `read_rib('https://routeviews.org/.../rib.20260629.0000.bz2')`.
                 format!(
-                    "SELECT bgp.main.bgp_version();\n\
-                     SELECT bgp.main.path_length([7018, 174, 13335]);\n\
+                    "SELECT bgp.main.path_length([7018, 174, 13335]);\n\
                      SELECT bgp.main.origin_asn([7018, 174, 13335]);\n\
                      SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]);\n\
                      SELECT bgp.main.path_contains([7018, 174, 13335], 174);\n\
@@ -195,9 +186,35 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                      SELECT count(*) FROM bgp.main.read_rib(from_hex('{rib}'));\n\
                      SELECT message_type, count(*) FROM \
                      bgp.main.read_updates(from_hex('{upd}')) GROUP BY 1;\n\
-                     SELECT * FROM bgp.main.peers(from_hex('{rib}'));",
+                     SELECT peer_ip, peer_asn, collector FROM bgp.main.peers(from_hex('{rib}'));",
                     rib = crate::meta::RIB_MRT_HEX,
                     upd = crate::meta::UPD_MRT_HEX,
+                ),
+            ),
+            (
+                // Guaranteed-runnable, self-contained examples (VGI509). The
+                // AS-path / community helpers use inline literals; the reader
+                // example decodes the built-in RIB fixture via `from_hex(...)`.
+                "vgi.executable_examples".to_string(),
+                format!(
+                    r#"[
+  {{
+    "description": "AS-path and community helpers over inline literals: hop count, origin AS, prepend count, path membership, large-community classification, and standard-community parse.",
+    "sql": [
+      "SELECT bgp.main.path_length([7018, 174, 174, 13335]) AS hops",
+      "SELECT bgp.main.origin_asn([7018, 174, 13335]) AS origin",
+      "SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]) AS prepends",
+      "SELECT bgp.main.path_contains([7018, 174, 13335], 174) AS via_174",
+      "SELECT bgp.main.is_large_community('65001:1:2') AS is_large",
+      "SELECT bgp.main.community_parse('65001:100').asn AS asn"
+    ]
+  }},
+  {{
+    "description": "Decode the built-in inline TABLE_DUMP_V2 RIB fixture and count routes per origin AS.",
+    "sql": "SELECT origin_asn, count(*) AS routes FROM bgp.main.read_rib(from_hex('{rib}')) GROUP BY origin_asn ORDER BY routes DESC, origin_asn"
+  }}
+]"#,
+                    rib = crate::meta::RIB_MRT_HEX,
                 ),
             ),
             ("vgi.author".to_string(), "Query.Farm".to_string()),
@@ -216,6 +233,10 @@ fn catalog_metadata(name: &str) -> CatalogModel {
             ),
         ],
         source_url: Some("https://github.com/Query-farm/vgi-bgp".to_string()),
+        // The worker's own build version (the workspace crate version). An agent
+        // reads this from `vgi_catalogs()` without spending a query, so the
+        // surface carries no parameterless `*_version()` scalar (VGI328).
+        implementation_version: Some(bgp_core::version().to_string()),
         schemas: vec![CatSchema {
             name: "main".to_string(),
             comment: Some(
@@ -243,8 +264,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                     r#"[
   {"name":"MRT readers","description":"Table functions that stream MRT routing-dump archives — BGP4MP update streams and TABLE_DUMP_V2 RIB snapshots — into relational rows, with prefixes and peer IPs as DuckDB INET."},
   {"name":"AS-path analysis","description":"Scalar helpers over the LIST(UINTEGER) AS-path column: path length, origin AS, prepend counting, and ASN membership tests."},
-  {"name":"BGP communities","description":"Scalar helpers that parse and classify standard and RFC 8092 large BGP community strings."},
-  {"name":"Worker info","description":"Diagnostic helpers, such as the worker build/version string."}
+  {"name":"BGP communities","description":"Scalar helpers that parse and classify standard and RFC 8092 large BGP community strings."}
 ]"#
                     .to_string(),
                 ),
@@ -256,8 +276,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                      TABLE_DUMP_V2 RIB snapshots) into rows, and scalar helpers that operate on \
                      the AS-path and BGP-community columns those rows expose. Table-function \
                      output carries prefix / peer_ip / next_hop as DuckDB INET (cast `::INET`), \
-                     the AS path as LIST(UINTEGER), and communities as LIST(VARCHAR). List the \
-                     schema to discover the individual functions and their signatures."
+                     the AS path as `LIST(UINTEGER)`, and communities as `LIST(VARCHAR)`."
                         .to_string(),
                 ),
                 (
@@ -281,8 +300,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                      ## When to reach for it\n\n\
                      Reach for it for route-leak and prefix-hijack investigation, for diffing two \
                      RIB snapshots over time, and for origin-AS analysis. Since the catalog name \
-                     matches the ATTACH name, calls qualify as `bgp.main.<name>(...)`; list the \
-                     schema to discover the exact functions and their signatures. RPKI / \
+                     matches the ATTACH name, calls qualify as `bgp.main.<name>(...)`. RPKI / \
                      route-origin validation is out of scope here — JOIN the origin AS against \
                      your own VRP table."
                         .to_string(),
@@ -292,22 +310,58 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                     // Self-contained inline-BLOB examples (see the catalog note). For prefix
                     // containment in a real query add `LOAD inet;` and filter
                     // `WHERE prefix::INET >>= '203.0.113.5'::INET`.
-                    format!(
-                        "SELECT bgp.main.bgp_version();\n\
-                         SELECT bgp.main.path_length([7018, 174, 13335]);\n\
-                         SELECT bgp.main.origin_asn([7018, 174, 13335]);\n\
-                         SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]);\n\
-                         SELECT bgp.main.path_contains([7018, 174, 13335], 174);\n\
-                         SELECT bgp.main.community_parse('65001:100');\n\
-                         SELECT bgp.main.is_large_community('65001:1:2');\n\
-                         SELECT count(*) FROM bgp.main.read_rib(from_hex('{rib}'));\n\
-                         SELECT origin_asn, as_path, bgp.main.path_length(as_path) AS hops \
-                         FROM bgp.main.read_rib(from_hex('{rib}')) ORDER BY hops;\n\
-                         SELECT message_type, count(*) FROM \
-                         bgp.main.read_updates(from_hex('{upd}')) GROUP BY 1;",
-                        rib = crate::meta::RIB_MRT_HEX,
-                        upd = crate::meta::UPD_MRT_HEX,
-                    ),
+                    crate::meta::example_queries_json(&[
+                        (
+                            "Count the AS hops in an inline AS-path literal.",
+                            "SELECT bgp.main.path_length([7018, 174, 13335]) AS hops;",
+                        ),
+                        (
+                            "Get the origin AS (last ASN) of an inline AS-path literal.",
+                            "SELECT bgp.main.origin_asn([7018, 174, 13335]) AS origin;",
+                        ),
+                        (
+                            "Count the prepended (padded) ASNs in an inline AS-path literal.",
+                            "SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]) AS prepends;",
+                        ),
+                        (
+                            "Test whether an inline AS path traverses a given ASN.",
+                            "SELECT bgp.main.path_contains([7018, 174, 13335], 174) AS via_174;",
+                        ),
+                        (
+                            "Split a standard community string into its ASN and value parts.",
+                            "SELECT bgp.main.community_parse('65001:100') AS parts;",
+                        ),
+                        (
+                            "Classify whether a community string is an RFC 8092 large community.",
+                            "SELECT bgp.main.is_large_community('65001:1:2') AS is_large;",
+                        ),
+                        (
+                            "Count the RIB entries decoded from the built-in inline TABLE_DUMP_V2 \
+                             fixture.",
+                            &format!(
+                                "SELECT count(*) AS entries \
+                                 FROM bgp.main.read_rib(from_hex('{rib}'));",
+                                rib = crate::meta::RIB_MRT_HEX,
+                            ),
+                        ),
+                        (
+                            "Rank the inline RIB routes by AS-path length using the path_length \
+                             helper on the emitted as_path column.",
+                            &format!(
+                                "SELECT origin_asn, as_path, bgp.main.path_length(as_path) AS hops \
+                                 FROM bgp.main.read_rib(from_hex('{rib}')) ORDER BY hops;",
+                                rib = crate::meta::RIB_MRT_HEX,
+                            ),
+                        ),
+                        (
+                            "Count each message type in the built-in inline BGP4MP update stream.",
+                            &format!(
+                                "SELECT message_type, count(*) AS messages \
+                                 FROM bgp.main.read_updates(from_hex('{upd}')) GROUP BY 1;",
+                                upd = crate::meta::UPD_MRT_HEX,
+                            ),
+                        ),
+                    ]),
                 ),
             ],
             views: vec![example_rib_view()],

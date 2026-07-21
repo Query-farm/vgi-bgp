@@ -24,7 +24,8 @@ pub use decode::{Decoder, MrtRow, MsgType, PeerRow};
 pub use inet::{encode as encode_inet, encode_ip, InetVal};
 
 /// The worker's own build version (the `bgp-core` crate version, which the
-/// workspace keeps in lockstep with `bgp-worker`). Surfaced by `bgp.bgp_version`.
+/// workspace keeps in lockstep with `bgp-worker`). Published as the catalog's
+/// `implementation_version` so an agent reads it from `vgi_catalogs()`.
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }

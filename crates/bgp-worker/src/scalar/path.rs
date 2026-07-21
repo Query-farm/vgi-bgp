@@ -55,16 +55,26 @@ impl ScalarFunction for PathLength {
                 description: "Count the AS hops in a path (here 3).".into(),
                 expected_output: None,
             }],
-            tags: crate::meta::object_tags(
-                "AS Path Length",
-                "Return the number of AS hops in an AS path (its length) — the LIST(UINTEGER) \
-                 `as_path` column from read_rib / read_updates. An empty path is 0; NULL input is \
-                 NULL. Use it to rank routes for leak/hijack triage (a suspiciously long or short \
-                 path).",
-                "Number of AS hops in an AS path, e.g. `path_length([7018,174,13335])` = 3.",
-                "path length, as path length, hops, route length, as_path, leak, hijack",
-                "AS-path analysis",
-            ),
+            tags: {
+                let mut tags = crate::meta::object_tags(
+                    "AS Path Length",
+                    "Return the number of AS hops in an AS path (its length) — the \
+                     `LIST(UINTEGER)` `as_path` column from read_rib / read_updates. An empty path \
+                     is 0; NULL input is NULL. Use it to rank routes for leak/hijack triage (a \
+                     suspiciously long or short path).",
+                    "Number of AS hops in an AS path, e.g. `path_length([7018,174,13335])` = 3.",
+                    "path length, as path length, hops, route length, as_path, leak, hijack",
+                    "AS-path analysis",
+                );
+                tags.push((
+                    "vgi.example_queries".into(),
+                    crate::meta::example_queries_json(&[(
+                        "Count the AS hops in a path (here 3).",
+                        "SELECT bgp.main.path_length([7018, 174, 13335]);",
+                    )]),
+                ));
+                tags
+            },
             ..Default::default()
         }
     }
@@ -103,16 +113,26 @@ impl ScalarFunction for OriginAsn {
                 description: "Get the origin AS that announced the prefix (here 13335).".into(),
                 expected_output: None,
             }],
-            tags: crate::meta::object_tags(
-                "AS Path Origin",
-                "Return the origin AS of an AS path — the last (right-most) ASN, which announced \
-                 the prefix. NULL for an empty or NULL path. Join the result against an RPKI/VRP \
-                 table to validate route origins (route-origin validation lives in vgi-netflow, \
-                 not here).",
-                "Origin AS of an AS path, e.g. `origin_asn([7018,174,13335])` = 13335.",
-                "origin asn, origin as, route origin, last as, as_path, RPKI, hijack",
-                "AS-path analysis",
-            ),
+            tags: {
+                let mut tags = crate::meta::object_tags(
+                    "AS Path Origin",
+                    "Return the origin AS of an AS path — the last (right-most) ASN, which \
+                     announced the prefix. NULL for an empty or NULL path. Join the result against \
+                     an RPKI/VRP table to validate route origins (route-origin validation lives in \
+                     vgi-netflow, not here).",
+                    "Origin AS of an AS path, e.g. `origin_asn([7018,174,13335])` = 13335.",
+                    "origin asn, origin as, route origin, last as, as_path, RPKI, hijack",
+                    "AS-path analysis",
+                );
+                tags.push((
+                    "vgi.example_queries".into(),
+                    crate::meta::example_queries_json(&[(
+                        "Get the origin AS that announced the prefix (here 13335).",
+                        "SELECT bgp.main.origin_asn([7018, 174, 13335]);",
+                    )]),
+                ));
+                tags
+            },
             ..Default::default()
         }
     }
@@ -151,16 +171,26 @@ impl ScalarFunction for AsPathPrepends {
                 description: "Count the prepended (padded) ASNs in a path (here 1).".into(),
                 expected_output: None,
             }],
-            tags: crate::meta::object_tags(
-                "AS-Path Prepend Count",
-                "Return the number of AS-path prepends: extra occurrences of an ASN that \
-                 immediately repeats its predecessor, i.e. an AS padding its own number to \
-                 deprioritize a route. `[1,1,1,2]` has two prepends, `[1,2,3]` has none. NULL \
-                 input is NULL.",
-                "Count of AS-path prepends, e.g. `as_path_prepends([1,1,1,2])` = 2.",
-                "as path prepends, prepending, padding, traffic engineering, as_path",
-                "AS-path analysis",
-            ),
+            tags: {
+                let mut tags = crate::meta::object_tags(
+                    "AS-Path Prepend Count",
+                    "Return the number of AS-path prepends: extra occurrences of an ASN that \
+                     immediately repeats its predecessor, i.e. an AS padding its own number to \
+                     deprioritize a route. `[1,1,1,2]` has two prepends, `[1,2,3]` has none. NULL \
+                     input is NULL.",
+                    "Count of AS-path prepends, e.g. `as_path_prepends([1,1,1,2])` = 2.",
+                    "as path prepends, prepending, padding, traffic engineering, as_path",
+                    "AS-path analysis",
+                );
+                tags.push((
+                    "vgi.example_queries".into(),
+                    crate::meta::example_queries_json(&[(
+                        "Count the prepended (padded) ASNs in a path (here 1).",
+                        "SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]);",
+                    )]),
+                ));
+                tags
+            },
             ..Default::default()
         }
     }
@@ -199,16 +229,26 @@ impl ScalarFunction for PathContains {
                 description: "Test whether a path traverses AS 174 (here true).".into(),
                 expected_output: None,
             }],
-            tags: crate::meta::object_tags(
-                "AS Path Contains ASN",
-                "Return whether an AS path traverses a given ASN anywhere along it. NULL if the \
-                 path is NULL. Use it to find every route that passes through a suspect transit \
-                 AS (leak detection).",
-                "Whether an AS path contains an ASN, e.g. \
-                 `path_contains([7018,174,13335], 174)` = true.",
-                "path contains, traverses, transit as, through asn, as_path, leak detection",
-                "AS-path analysis",
-            ),
+            tags: {
+                let mut tags = crate::meta::object_tags(
+                    "AS Path Contains ASN",
+                    "Return whether an AS path traverses a given ASN anywhere along it. NULL if \
+                     the path is NULL. Use it to find every route that passes through a suspect \
+                     transit AS (leak detection).",
+                    "Whether an AS path contains an ASN, e.g. \
+                     `path_contains([7018,174,13335], 174)` = true.",
+                    "path contains, traverses, transit as, through asn, as_path, leak detection",
+                    "AS-path analysis",
+                );
+                tags.push((
+                    "vgi.example_queries".into(),
+                    crate::meta::example_queries_json(&[(
+                        "Test whether a path traverses AS 174 (here true).",
+                        "SELECT bgp.main.path_contains([7018, 174, 13335], 174);",
+                    )]),
+                ));
+                tags
+            },
             ..Default::default()
         }
     }

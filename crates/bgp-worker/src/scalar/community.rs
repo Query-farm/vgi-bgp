@@ -49,18 +49,28 @@ impl ScalarFunction for CommunityParse {
                 description: "Split a standard community into {asn: 65001, value: 100}.".into(),
                 expected_output: None,
             }],
-            tags: crate::meta::object_tags(
-                "Parse BGP Community",
-                "Parse a standard BGP community string ('<asn>:<value>') into a STRUCT(asn \
-                 UINTEGER, value UINTEGER). Returns a NULL struct for anything that is not a plain \
-                 two-part community — a large community ('a:b:c'), a well-known mnemonic \
-                 ('NO_EXPORT'), or NULL input. Use it to filter or group routes by community \
-                 without a regex.",
-                "Parse a standard community into (asn, value), e.g. \
-                 `community_parse('65001:100')` = {asn: 65001, value: 100}.",
-                "community parse, bgp community, asn value, standard community, tag, decode",
-                "BGP communities",
-            ),
+            tags: {
+                let mut tags = crate::meta::object_tags(
+                    "Parse BGP Community",
+                    "Parse a standard BGP community string ('<asn>:<value>') into a \
+                     `STRUCT(asn UINTEGER, value UINTEGER)`. Returns a NULL struct for anything \
+                     that is not a plain two-part community — a large community ('a:b:c'), a \
+                     well-known mnemonic ('NO_EXPORT'), or NULL input. Use it to filter or group \
+                     routes by community without a regex.",
+                    "Parse a standard community into (asn, value), e.g. \
+                     `community_parse('65001:100')` = {asn: 65001, value: 100}.",
+                    "community parse, bgp community, asn value, standard community, tag, decode",
+                    "BGP communities",
+                );
+                tags.push((
+                    "vgi.example_queries".into(),
+                    crate::meta::example_queries_json(&[(
+                        "Split a standard community into {asn: 65001, value: 100}.",
+                        "SELECT bgp.main.community_parse('65001:100');",
+                    )]),
+                ));
+                tags
+            },
             ..Default::default()
         }
     }
@@ -120,16 +130,27 @@ impl ScalarFunction for IsLargeCommunity {
                 description: "Detect a large community (three numeric parts → true).".into(),
                 expected_output: None,
             }],
-            tags: crate::meta::object_tags(
-                "Large-Community Classifier",
-                "Return whether a community string is a large community (RFC 8092): exactly three \
-                 colon-separated unsigned-integer parts, '<global>:<data1>:<data2>'. False for a \
-                 standard 'a:b' community or a well-known mnemonic; NULL input is NULL.",
-                "Whether a community is a large community, e.g. \
-                 `is_large_community('65001:1:2')` = true.",
-                "large community, RFC 8092, community type, three part community, classify",
-                "BGP communities",
-            ),
+            tags: {
+                let mut tags = crate::meta::object_tags(
+                    "Large-Community Classifier",
+                    "Return whether a community string is a large community (RFC 8092): exactly \
+                     three colon-separated unsigned-integer parts, '<global>:<data1>:<data2>'. \
+                     False for a standard 'a:b' community or a well-known mnemonic; NULL input is \
+                     NULL.",
+                    "Whether a community is a large community, e.g. \
+                     `is_large_community('65001:1:2')` = true.",
+                    "large community, RFC 8092, community type, three part community, classify",
+                    "BGP communities",
+                );
+                tags.push((
+                    "vgi.example_queries".into(),
+                    crate::meta::example_queries_json(&[(
+                        "Detect a large community (three numeric parts, so true).",
+                        "SELECT bgp.main.is_large_community('65001:1:2');",
+                    )]),
+                ));
+                tags
+            },
             ..Default::default()
         }
     }

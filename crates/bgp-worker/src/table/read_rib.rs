@@ -25,21 +25,23 @@ impl TableFunction for ReadRib {
             "Read MRT RIB Snapshot",
             "Scan an MRT TABLE_DUMP_V2 RIB snapshot (a RouteViews / RIPE RIS `rib.*` archive) into \
              one row per (prefix, peer) RIB entry. `src` is a path — local, a glob, an `s3://` \
-             URL, or an `http(s)://` URL — or an inline BLOB of MRT bytes; gzip (`.gz`) and bzip2 \
+             URL, or an `http(s)://` URL — or an inline `BLOB` of MRT bytes; gzip (`.gz`) and bzip2 \
              (`.bz2`) inputs are decompressed transparently. Each row carries the route timestamp, \
              RIB view name, the reporting peer (peer_ip INET, peer_asn), the prefix (INET), the \
-             AS path (LIST(UINTEGER)), origin ASN, next hop (INET), communities (LIST(VARCHAR) — \
-             standard and large), MED, local pref, atomic-aggregate flag, and aggregator ASN. \
+             AS path (`LIST(UINTEGER)`), origin ASN, next hop (INET), communities \
+             (`LIST(VARCHAR)` — standard and large), MED, local pref, atomic-aggregate flag, and \
+             aggregator ASN. \
              prefix / peer_ip / next_hop are DuckDB INET values (cast with `::INET`), so prefix \
              containment (`prefix::INET <<= '203.0.113.0/24'`) and joins against vgi-netflow / \
              geoip work without parsing strings. A malformed record yields a row with NULL fields \
              and a populated `error` column unless `strict => true`. This is the RIB counterpart \
              of read_updates.",
             "Scan an MRT TABLE_DUMP_V2 RIB dump into rows: timestamp, view_name, peer_ip (INET), \
-             peer_asn, prefix (INET), as_path (LIST(UINTEGER)), origin_asn, next_hop (INET), \
-             communities (LIST(VARCHAR)), med, local_pref, atomic_aggregate, aggregator_asn, and \
-             an `error` capture column. `src` is a path / glob / `s3://` / `http(s)://` URL or a \
-             BLOB; `.gz`/`.bz2` auto-decompress. Cast INET columns with `::INET` for containment.",
+             peer_asn, prefix (INET), as_path (`LIST(UINTEGER)`), origin_asn, next_hop (INET), \
+             communities (`LIST(VARCHAR)`), med, local_pref, atomic_aggregate, aggregator_asn, \
+             and an `error` capture column. `src` is a path / glob / `s3://` / `http(s)://` URL or \
+             a `BLOB`; `.gz`/`.bz2` auto-decompress. Cast INET columns with `::INET` for \
+             containment.",
             "read rib, MRT, TABLE_DUMP_V2, RouteViews, RIPE RIS, routing table, BGP RIB, prefix, \
              AS path, origin ASN, next hop, communities, INET, route leak, hijack, table function",
             "MRT readers",
@@ -63,6 +65,19 @@ impl TableFunction for ReadRib {
                 ("aggregator_asn", "UINTEGER", "The AS that formed an aggregate route (AGGREGATOR attribute), or NULL."),
                 ("error", "VARCHAR", "Decode error for a malformed record (all other columns NULL); NULL on a clean row. A malformed record instead aborts the scan when `strict => true`."),
             ]),
+        ));
+        // VGI515: the native duckdb_functions().examples carrier drops the
+        // description, so re-declare the example as a described {description,sql}
+        // list — dedup keeps this described copy over the bare native one.
+        tags.push((
+            "vgi.example_queries".into(),
+            crate::meta::example_queries_json(&[(
+                "Scan an inline TABLE_DUMP_V2 RIB snapshot (3 entries) into rows.",
+                &format!(
+                    "SELECT prefix, origin_asn, as_path FROM bgp.main.read_rib(from_hex('{}'));",
+                    crate::meta::RIB_MRT_HEX
+                ),
+            )]),
         ));
         FunctionMetadata {
             description: "Read an MRT TABLE_DUMP_V2 RIB snapshot into rows".into(),
