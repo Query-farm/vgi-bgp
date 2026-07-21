@@ -26,7 +26,16 @@ concurrency:
 jobs:
   # Gate every image on the full unit + vgi-extension integration suite, so a
   # broken worker is never imaged.
+  #
+  # A called reusable workflow may not request MORE permission than its caller
+  # job grants. ci.yml's `audit` job needs `checks: write` (rustsec/audit-check
+  # posts a check-run), so this caller job must grant it too — otherwise the
+  # read-only default caps the nested request and the whole run fails to start
+  # (startup_failure). `contents: read` covers the checkout in ci.yml's jobs.
   ci:
+    permissions:
+      contents: read
+      checks: write
     uses: ./.github/workflows/ci.yml
 
   publish:
@@ -69,62 +78,32 @@ jobs:
       # $CITEST_IMAGE is the loaded <image>:citest-amd64 ref; GH_TOKEN is provided.
       image_test: |
         set -euo pipefail
-
         echo "::group::download haybarn-unittest"
         REL=$(gh release view --repo Query-farm-haybarn/haybarn --json tagName --jq .tagName)
-        gh release download "$REL" --repo Query-farm-haybarn/haybarn \
-          --pattern 'haybarn_unittest-linux-amd64.zip' --output hb.zip --clobber
+        gh release download "$REL" --repo Query-farm-haybarn/haybarn --pattern 'haybarn_unittest-linux-amd64.zip' --output hb.zip --clobber
         mkdir -p hb && unzip -o -q hb.zip -d hb
         HB="$PWD/$(find hb -name 'haybarn-unittest' -type f | head -1)"
         chmod +x "$HB"
         echo "::endgroup::"
-
         echo "::group::warm extensions (vgi from community + inet + httpfs)"
-        cat > _warm.test <<'WARM'
-        # name: _warm.test
-        # group: [warm]
-        statement ok
-        INSTALL vgi FROM community;
-
-        statement ok
-        INSTALL inet;
-
-        statement ok
-        INSTALL httpfs;
-        WARM
+        printf '# name: _warm.test\n# group: [warm]\nstatement ok\nINSTALL vgi FROM community;\n\nstatement ok\nINSTALL inet;\n\nstatement ok\nINSTALL httpfs;\n' > _warm.test
         "$HB" --test-dir "$PWD" _warm.test || echo "::warning::extension warm step did not fully succeed"
         rm -f _warm.test
         echo "::endgroup::"
-
-        echo "::group::stdio entrypoint smoke (scalars.test — file-free, cold container per ATTACH)"
-        VGI_BGP_WORKER="docker run -i --rm $CITEST_IMAGE stdio" \
-          "$HB" --test-dir "$PWD" test/sql/scalars.test
+        echo "::group::stdio entrypoint smoke (scalars.test, file-free)"
+        VGI_BGP_WORKER="docker run -i --rm $CITEST_IMAGE stdio" "$HB" --test-dir "$PWD" test/sql/scalars.test
         echo "::endgroup::"
-
-        echo "::group::full SQL suite — HTTP transport (one warm container)"
-        CID=$(docker run -d -p 18000:8000 -e VGI_BGP_BATCH_ROWS=1 \
-                -v "$PWD/data:/app/data:ro" "$CITEST_IMAGE")
+        echo "::group::full SQL suite over one warm HTTP container"
+        CID=$(docker run -d -p 18000:8000 -e VGI_BGP_BATCH_ROWS=1 -v "$PWD/data:/app/data:ro" "$CITEST_IMAGE")
         trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT
         for _ in $(seq 1 30); do curl -fsS -o /dev/null http://localhost:18000/health && break; sleep 1; done
-        # Stage the .test files with `LOAD httpfs;` injected after each `LOAD vgi;`
-        # (the vgi extension's HTTP client rides on httpfs). The worker reads the
-        # data/*.mrt fixtures from the container's bind-mounted /app/data.
         rm -rf staged && mkdir -p staged/test/sql
-        for f in test/sql/*.test; do
-          awk '{print} /^LOAD vgi;$/{print "\nstatement ok\nLOAD httpfs;"}' "$f" \
-            > "staged/test/sql/$(basename "$f")"
-        done
+        for f in test/sql/*.test; do awk '{print} /^LOAD vgi;$/{print "\nstatement ok\nLOAD httpfs;"}' "$f" > "staged/test/sql/$(basename "$f")"; done
         REPORT="$(mktemp)"
         set +e
-        VGI_BGP_WORKER="http://localhost:18000" VGI_BGP_BATCH_ROWS=1 \
-          "$HB" --test-dir "$PWD/staged" 'test/sql/*' 2>&1 | tee "$REPORT"
+        VGI_BGP_WORKER="http://localhost:18000" VGI_BGP_BATCH_ROWS=1 "$HB" --test-dir "$PWD/staged" 'test/sql/*' 2>&1 | tee "$REPORT"
         status="${PIPESTATUS[0]}"
         set -e
-        # A skip is NOT a pass: a broken HTTP ATTACH errors with an "HTTP"-matching
-        # message the runner silently ignores, which would otherwise look green.
-        if grep -qiE "All tests were skipped|total skipped [1-9]" "$REPORT"; then
-          echo "ERROR: tests were SKIPPED (an ATTACH/transport error the runner auto-ignored) — not a pass." >&2
-          exit 1
-        fi
+        if grep -qiE "All tests were skipped|total skipped [1-9]" "$REPORT"; then echo "ERROR: HTTP tests were SKIPPED (a transport error the runner auto-ignored) - not a pass." >&2; exit 1; fi
         exit "$status"
         echo "::endgroup::"
