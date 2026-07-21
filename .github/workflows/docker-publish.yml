@@ -86,9 +86,13 @@ jobs:
         chmod +x "$HB"
         echo "::endgroup::"
         echo "::group::warm extensions (vgi from community + inet + httpfs)"
-        printf '# name: _warm.test\n# group: [warm]\nstatement ok\nINSTALL vgi FROM community;\n\nstatement ok\nINSTALL inet;\n\nstatement ok\nINSTALL httpfs;\n' > _warm.test
-        "$HB" --test-dir "$PWD" _warm.test || echo "::warning::extension warm step did not fully succeed"
-        rm -f _warm.test
+        # haybarn-unittest discovers .test files under <test-dir>/test/** and
+        # filters by the `# name:` path, so the warm file must live at
+        # test/_warm.test (a root-level file is never registered). Installs
+        # persist to ~/.haybarn/extensions so the later LOADs resolve.
+        printf '# name: test/_warm.test\n# group: [warm]\nstatement ok\nINSTALL vgi FROM community;\n\nstatement ok\nINSTALL inet;\n\nstatement ok\nINSTALL httpfs;\n' > test/_warm.test
+        "$HB" --test-dir "$PWD" 'test/_warm.test' || echo "::warning::extension warm step did not fully succeed"
+        rm -f test/_warm.test
         echo "::endgroup::"
         echo "::group::stdio entrypoint smoke (scalars.test, file-free)"
         VGI_BGP_WORKER="docker run -i --rm $CITEST_IMAGE stdio" "$HB" --test-dir "$PWD" test/sql/scalars.test
