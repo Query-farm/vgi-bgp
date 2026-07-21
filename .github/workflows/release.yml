@@ -26,7 +26,16 @@ permissions:
 
 jobs:
   # Gate the release on the same unit + SQLLogic e2e suite as push/PR.
+  #
+  # A called reusable workflow may not request MORE permission than its caller
+  # job grants. ci.yml's `audit` job needs `checks: write` (rustsec/audit-check
+  # posts a check-run), so this caller job must grant it too — otherwise the read
+  # only default caps the nested request and the whole run fails to start
+  # (startup_failure). `contents: read` covers the checkout in ci.yml's jobs.
   ci:
+    permissions:
+      contents: read
+      checks: write
     uses: ./.github/workflows/ci.yml
 
   release:
