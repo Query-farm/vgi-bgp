@@ -11,6 +11,9 @@
 //! deliberately unsupported (a clear error, not a silent local-file fallback).
 
 use std::future::Future;
+// Only the native multi-thread `runtime()` uses OnceLock; the wasm build drives a
+// per-thread current-thread runtime instead, so gate the import to match.
+#[cfg(not(target_arch = "wasm32"))]
 use std::sync::OnceLock;
 
 use object_store::path::Path as ObjPath;
@@ -133,6 +136,7 @@ pub fn secret_lookups(paths: &[String]) -> Vec<SecretLookup> {
 }
 
 /// A shared multi-thread runtime owned by this process for cloud I/O.
+#[cfg(not(target_arch = "wasm32"))]
 fn runtime() -> &'static tokio::runtime::Runtime {
     static RT: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
     RT.get_or_init(|| {
@@ -145,6 +149,7 @@ fn runtime() -> &'static tokio::runtime::Runtime {
 
 /// Drive a future to completion from synchronous code, whatever ambient runtime
 /// (if any) the host transport set up.
+#[cfg(not(target_arch = "wasm32"))]
 fn block_on<F>(fut: F) -> F::Output
 where
     F: Future + Send,
@@ -158,6 +163,27 @@ where
         Ok(_) => std::thread::scope(|s| s.spawn(|| runtime().block_on(fut)).join().unwrap()),
         Err(_) => runtime().block_on(fut),
     }
+}
+
+/// wasm32: there is no ambient runtime and no I/O driver — the XHR transport
+/// blocks inline, so nothing ever parks on a socket. `enable_time` is
+/// **required**: object_store's retry layer awaits `tokio::time::sleep` for
+/// backoff, which never wakes without a time driver. The runtime is per-thread
+/// and long-lived (one serve thread per ring slot), not per-call — dropping a
+/// tokio runtime blocks until its tasks finish, which would wedge the thread.
+#[cfg(target_arch = "wasm32")]
+fn block_on<F>(fut: F) -> F::Output
+where
+    F: Future + Send,
+    F::Output: Send,
+{
+    thread_local! {
+        static RT: tokio::runtime::Runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_time()
+            .build()
+            .expect("build tokio runtime for cloud I/O");
+    }
+    RT.with(|rt| rt.block_on(fut))
 }
 
 /// Whether `ip` is on a network the worker should not be tricked into reaching

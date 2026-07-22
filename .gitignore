@@ -3,6 +3,9 @@
 **/*.rs.bk
 .DS_Store
 
+# Browser build output (wasm/build.sh)
+/wasm/dist
+
 # vgi-lint review / AI caches
 .vgi-*-cache.json
 
