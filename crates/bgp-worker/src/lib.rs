@@ -102,76 +102,62 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                         "path_hops",
                         "Given the AS path [7018, 174, 174, 13335], return the number of AS hops as \
                          a single column named hops.",
-                        "SELECT bgp.main.path_length([7018, 174, 174, 13335]) AS hops",
                     ),
                     (
                         "origin",
                         "Given the AS path [7018, 174, 13335], return the origin AS (the AS that \
                          announced the prefix) as a single column named origin.",
-                        "SELECT bgp.main.origin_asn([7018, 174, 13335]) AS origin",
                     ),
                     (
                         "large_community",
                         "Is the community string '65001:1:2' a large community? Return a single \
                          BOOLEAN column named is_large.",
-                        "SELECT bgp.main.is_large_community('65001:1:2') AS is_large",
                     ),
                     (
                         "rib_count",
                         "The file data/rib.mrt is an MRT TABLE_DUMP_V2 RIB snapshot. Count how many \
                          RIB entries it contains and return the count as a single column named \
                          entries.",
-                        "SELECT count(*) AS entries FROM bgp.main.read_rib('data/rib.mrt')",
                     ),
                     (
                         "rib_prefix_contains",
                         "From the RIB snapshot data/rib.mrt, count how many routes cover the \
                          address 203.0.113.5 (the prefix contains it). Return the count as a single \
                          column named routes.",
-                        "SELECT count(*) AS routes FROM bgp.main.read_rib('data/rib.mrt') \
-                         WHERE prefix::INET >>= '203.0.113.5'::INET",
                     ),
                     (
                         "prepends",
                         "Given the AS path [7018, 174, 174, 13335], how many AS-path prepends \
                          (padded repeated ASNs) does it contain? Return a single column named \
                          prepends.",
-                        "SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]) AS prepends",
                     ),
                     (
                         "traverses",
                         "Does the AS path [7018, 174, 13335] pass through AS 174 anywhere along \
                          it? Return a single BOOLEAN column named traverses.",
-                        "SELECT bgp.main.path_contains([7018, 174, 13335], 174) AS traverses",
                     ),
                     (
                         "community_parts",
                         "Split the standard BGP community '65001:100' into its ASN and value \
                          parts. Return two columns named asn and value.",
-                        "SELECT bgp.main.community_parse('65001:100').asn AS asn, \
-                         bgp.main.community_parse('65001:100').value AS value",
                     ),
                     (
                         "update_withdrawals",
                         "The file data/updates.mrt is an MRT BGP4MP update stream. Count how many \
                          withdrawal messages it contains and return the count as a single column \
                          named withdrawals.",
-                        "SELECT count(*) AS withdrawals FROM bgp.main.read_updates('data/updates.mrt') \
-                         WHERE message_type = 'withdraw'",
                     ),
                     (
                         "peer_count",
                         "The file data/rib.mrt is an MRT TABLE_DUMP_V2 RIB snapshot. How many \
                          distinct peers does it contain? Return the count as a single column named \
                          peers.",
-                        "SELECT count(*) AS peers FROM bgp.main.peers('data/rib.mrt')",
                     ),
                     (
                         "sample_rows",
                         "The bgp worker exposes a small built-in sample of decoded RIB rows you \
                          can browse without providing a file. How many rows does that sample \
                          contain? Return the count as a single column named rows.",
-                        "SELECT count(*) AS rows FROM bgp.main.example_rib",
                     ),
                 ]),
             ),
@@ -244,6 +230,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
         implementation_version: Some(bgp_core::version().to_string()),
         schemas: vec![CatSchema {
             name: "main".to_string(),
+            path: Vec::new(),
             comment: Some(
                 "MRT decode (read_rib / read_updates / peers) plus AS-path and community helper \
                  functions."

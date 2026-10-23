@@ -140,6 +140,11 @@ struct PeersProducer {
 }
 
 impl TableProducer for PeersProducer {
+    fn resume_supported(&self) -> bool {
+        // Single batch: distinct peers are collected eagerly and emitted at once, so there is no cursor to resume.
+        false
+    }
+
     fn next_batch(&mut self, _out: &mut OutputCollector) -> Result<Option<RecordBatch>> {
         let Some(sources) = self.sources.take() else {
             return Ok(None);

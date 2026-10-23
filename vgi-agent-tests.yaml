@@ -1,0 +1,30 @@
+# Private graders for the agent-suitability suite (`vgi-lint simulate`).
+#
+# The prompts are published in the catalog's vgi.agent_test_tasks tag
+# (crates/bgp-worker/src/lib.rs); the answers live here, keyed by task name, so the
+# agent being graded never sees them. vgi-lint discovers this file in the
+# directory it runs from (the repo root in CI).
+
+tasks:
+  - name: "path_hops"
+    reference_sql: "SELECT bgp.main.path_length([7018, 174, 174, 13335]) AS hops"
+  - name: "origin"
+    reference_sql: "SELECT bgp.main.origin_asn([7018, 174, 13335]) AS origin"
+  - name: "large_community"
+    reference_sql: "SELECT bgp.main.is_large_community('65001:1:2') AS is_large"
+  - name: "rib_count"
+    reference_sql: "SELECT count(*) AS entries FROM bgp.main.read_rib('data/rib.mrt')"
+  - name: "rib_prefix_contains"
+    reference_sql: "SELECT count(*) AS routes FROM bgp.main.read_rib('data/rib.mrt') WHERE prefix::INET >>= '203.0.113.5'::INET"
+  - name: "prepends"
+    reference_sql: "SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]) AS prepends"
+  - name: "traverses"
+    reference_sql: "SELECT bgp.main.path_contains([7018, 174, 13335], 174) AS traverses"
+  - name: "community_parts"
+    reference_sql: "SELECT bgp.main.community_parse('65001:100').asn AS asn, bgp.main.community_parse('65001:100').value AS value"
+  - name: "update_withdrawals"
+    reference_sql: "SELECT count(*) AS withdrawals FROM bgp.main.read_updates('data/updates.mrt') WHERE message_type = 'withdraw'"
+  - name: "peer_count"
+    reference_sql: "SELECT count(*) AS peers FROM bgp.main.peers('data/rib.mrt')"
+  - name: "sample_rows"
+    reference_sql: "SELECT count(*) AS rows FROM bgp.main.example_rib"
