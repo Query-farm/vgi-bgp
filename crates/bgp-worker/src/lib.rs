@@ -452,6 +452,7 @@ fn example_rib_view() -> CatView {
                 "BGP communities as strings (standard `asn:value` and RFC 8092 large).".to_string(),
             ),
         ],
+        ..Default::default()
     }
 }
 

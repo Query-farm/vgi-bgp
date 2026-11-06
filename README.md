@@ -118,9 +118,9 @@ cargo clippy --all-targets -- -D warnings   # lint
 The end-to-end suite needs the haybarn tooling (one-time):
 
 ```sh
-uv tool install haybarn-unittest
-echo "INSTALL vgi FROM community;" | uvx haybarn-cli
-echo "INSTALL inet;"               | uvx haybarn-cli
+uv tool install --prerelease allow 'haybarn-unittest>=2.0.0rc11,<2.1'
+echo "FORCE INSTALL vgi FROM community;" | uvx --prerelease allow --from 'haybarn-cli>=2.0.0rc11,<2.1' haybarn-cli
+echo "INSTALL inet;"               | uvx --prerelease allow --from 'haybarn-cli>=2.0.0rc11,<2.1' haybarn-cli
 ```
 
 `run_tests.sh` builds the worker and runs `haybarn-unittest` against

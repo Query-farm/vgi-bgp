@@ -79,7 +79,9 @@ jobs:
       image_test: |
         set -euo pipefail
         echo "::group::download haybarn-unittest"
-        REL=$(gh release view --repo Query-farm-haybarn/haybarn --json tagName --jq .tagName)
+        REL=$(gh release list --repo Query-farm-haybarn/haybarn --limit 30 --json tagName \
+          --jq '[.[].tagName | select(startswith("haybarn-v2.0"))][0]')
+        [ -n "$REL" ] && [ "$REL" != null ] || { echo "::error::no haybarn-v2.0 release found"; exit 1; }
         gh release download "$REL" --repo Query-farm-haybarn/haybarn --pattern 'haybarn_unittest-linux-amd64.zip' --output hb.zip --clobber
         mkdir -p hb && unzip -o -q hb.zip -d hb
         HB="$PWD/$(find hb -name 'haybarn-unittest' -type f | head -1)"
@@ -90,12 +92,12 @@ jobs:
         # filters by the `# name:` path, so the warm file must live at
         # test/_warm.test (a root-level file is never registered). Installs
         # persist to ~/.haybarn/extensions so the later LOADs resolve.
-        printf '# name: test/_warm.test\n# group: [warm]\nstatement ok\nINSTALL vgi FROM community;\n\nstatement ok\nINSTALL inet;\n\nstatement ok\nINSTALL httpfs;\n' > test/_warm.test
-        "$HB" --test-dir "$PWD" 'test/_warm.test' || echo "::warning::extension warm step did not fully succeed"
+        printf '# name: test/_warm.test\n# group: [warm]\nstatement ok\nFORCE INSTALL vgi FROM community;\n\nstatement ok\nINSTALL inet;\n\nstatement ok\nINSTALL httpfs;\n' > test/_warm.test
+        "$HB" --keep-home --test-dir "$PWD" 'test/_warm.test' || echo "::warning::extension warm step did not fully succeed"
         rm -f test/_warm.test
         echo "::endgroup::"
         echo "::group::stdio entrypoint smoke (scalars.test, file-free)"
-        VGI_BGP_WORKER="docker run -i --rm $CITEST_IMAGE stdio" "$HB" --test-dir "$PWD" test/sql/scalars.test
+        VGI_BGP_WORKER="docker run -i --rm $CITEST_IMAGE stdio" "$HB" --keep-home --test-dir "$PWD" test/sql/scalars.test
         echo "::endgroup::"
         echo "::group::full SQL suite over one warm HTTP container"
         CID=$(docker run -d -p 18000:8000 -e VGI_BGP_BATCH_ROWS=1 -v "$PWD/data:/app/data:ro" "$CITEST_IMAGE")
@@ -105,7 +107,7 @@ jobs:
         for f in test/sql/*.test; do awk '{print} /^LOAD vgi;$/{print "\nstatement ok\nLOAD httpfs;"}' "$f" > "staged/test/sql/$(basename "$f")"; done
         REPORT="$(mktemp)"
         set +e
-        VGI_BGP_WORKER="http://localhost:18000" VGI_BGP_BATCH_ROWS=1 "$HB" --test-dir "$PWD/staged" 'test/sql/*' 2>&1 | tee "$REPORT"
+        VGI_BGP_WORKER="http://localhost:18000" VGI_BGP_BATCH_ROWS=1 "$HB" --keep-home --test-dir "$PWD/staged" 'test/sql/*' 2>&1 | tee "$REPORT"
         status="${PIPESTATUS[0]}"
         set -e
         if grep -qiE "All tests were skipped|total skipped [1-9]" "$REPORT"; then echo "ERROR: HTTP tests were SKIPPED (a transport error the runner auto-ignored) - not a pass." >&2; exit 1; fi
