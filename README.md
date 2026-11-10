@@ -14,7 +14,7 @@ instead of an ETL-to-Parquet step.
 
 ```sql
 INSTALL vgi FROM community; LOAD vgi; LOAD inet;
-ATTACH 'bgp' (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-bgp@v0.2.1');
+ATTACH 'bgp' (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-bgp@v0.3.0');
 
 -- every route covering a prefix, ordered by AS-path length (leak/hijack triage)
 SELECT peer_asn, origin_asn, as_path,
@@ -44,7 +44,7 @@ Every [GitHub release](https://github.com/Query-farm/vgi-bgp/releases) ships a p
 INSTALL vgi FROM community;
 LOAD vgi;
 
-ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-bgp@v0.2.1');
+ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-bgp@v0.3.0');
 
 -- AS-path and community helpers over inline literals: hop count, origin AS, prepend
 -- count, path membership, large-community classification, and standard-community parse.
@@ -59,14 +59,14 @@ SELECT bgp.main.community_parse('65001:100').asn AS asn;
 SELECT origin_asn, count(*) AS routes FROM bgp.main.read_rib(from_hex('68608200000d00010000003b000000000000000302c0000201c00002010000fde902c6336407c63364070000fdea030000000020010db80000000000000000000000010000fde968608200000d000400000079000000003020010db8abcd00010002686082000064800e1c0002011020010db8000000000000000000000001003020010db8abcd40031020010db8000000000000000000000001c0110e02030000fde90000fbf40000fc58400101004005040000006480040400000000c0200c0000fde9000000070000000968608200000d0002000000af0000000118cb007100020001686082000041800e0d00010104c63364070018cb0071400304c6336407c0110e02030000fdea0000fc010000fc00400101004005040000006480040400000000c00804fdea00c80000686082000054800e0d00010104c00002010018cb0071400304c0000201c0111202040000fde90000fbf40000fbf40000fc00400101004005040000006480040400000000c00804fde90064c0200c0000fde90000000100000002')) GROUP BY origin_asn ORDER BY routes DESC, origin_asn;
 ```
 
-Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64) and Windows (x86-64). `github-auto://` needs an explicit release tag; change `@v0.2.1` to move to a newer release.
+Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64) and Windows (x86-64). `github-auto://` needs an explicit release tag; change `@v0.3.0` to move to a newer release.
 
 ### Other ways to run it
 
 - **Docker** (the image bundles the worker; needs a container runtime):
 
   ```sql
-  ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-bgp:0.2.1');
+  ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-bgp:0.3.0');
   ```
 
 - **Manual download.** Download the archive for your platform from the [releases page](https://github.com/Query-farm/vgi-bgp/releases), verify it against its `.sha256` file (a cosign `.cosign.bundle` is published alongside), unpack it, and set `LOCATION` to the path of the extracted worker executable.
