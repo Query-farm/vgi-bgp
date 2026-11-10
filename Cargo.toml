@@ -20,7 +20,7 @@ repository = "https://github.com/Query-farm/vgi-bgp"
 # used by bgp-wasm; requires rustc 1.97 (see rust-version above). Base
 # (feature-less) so each target can opt in: the native build takes only
 # `transport-http` (not `sqlite`; see crates/bgp-worker/Cargo.toml), while the
-# wasm build must NOT —# tokio/mio/axum and bundled SQLite do not compile for wasm32, and the browser
+# wasm build must NOT — tokio/mio/axum and bundled SQLite do not compile for wasm32, and the browser
 # transport serves over a byte channel rather than HTTP. Features are additive,
 # and the two are behind mutually-exclusive target cfgs.
 vgi = { version = "0.50.0", default-features = false }
