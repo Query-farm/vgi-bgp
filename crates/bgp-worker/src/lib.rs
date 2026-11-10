@@ -43,9 +43,12 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                 .to_string(),
         ),
         tags: vec![
+            ("vgi.title".to_string(), "BGP MRT Decoder".to_string()),
             (
-                "vgi.title".to_string(),
-                "BGP / MRT Routing-Dump Decoder".to_string(),
+                "vgi.subtitle".to_string(),
+                "Query RouteViews and RIPE RIS MRT archives (RIB snapshots and BGP updates) \
+                 as SQL rows, with AS-path and community helpers."
+                    .to_string(),
             ),
             (
                 "vgi.keywords".to_string(),
@@ -237,7 +240,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                     .to_string(),
             ),
             tags: vec![
-                ("vgi.title".to_string(), "BGP — main".to_string()),
+                ("vgi.title".to_string(), "BGP Routing Data".to_string()),
                 (
                     "vgi.keywords".to_string(),
                     crate::meta::keywords_json(
@@ -372,7 +375,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
 /// glob, `s3://` / `http(s)://` URL, or an inline MRT BLOB.
 fn example_rib_view() -> CatView {
     let mut tags = crate::meta::object_tags(
-        "Sample RIB Rows (built-in fixture)",
+        "Sample RIB Routes",
         "A zero-setup preview of the row shape read_rib produces: three routes decoded from a \
          tiny TABLE_DUMP_V2 RIB fixture bundled into the worker. Browse it directly — a plain \
          no-argument scan — to see real decoded columns like timestamp, RIB view name, prefix \
