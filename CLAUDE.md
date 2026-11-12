@@ -8,7 +8,7 @@ Guidance for working in this repository.
 over Apache Arrow IPC, `ATTACH 'bgp' (TYPE vgi, LOCATION '…')`) that decodes
 **MRT** routing dumps — `BGP4MP` update streams and `TABLE_DUMP_V2` RIB
 snapshots — into rows under catalog `bgp`, schema `main`. Built on the published
-VGI Rust SDK (`vgi = "0.50.0"` from crates.io; VGI protocol 3.2, needs haybarn 2.0), arrow 59. Modeled on
+VGI Rust SDK (`vgi = "0.51.0"` from crates.io; VGI protocol 3.3, needs haybarn 2.0), arrow 59. Modeled on
 `../vgi-fixedformat`; the repo builds standalone — no local SDK checkout.
 
 ## Layout
