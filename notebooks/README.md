@@ -31,7 +31,7 @@ and reopen this current example.
 
 Canonical branding, isolated SQL secrets, SVG output and execution protections
 come from [vgi-example-notebooks](https://github.com/Query-farm/vgi-example-notebooks).
-The [shared v0.3.5 standard](https://github.com/Query-farm/vgi-example-notebooks/blob/v0.3.5/docs/standard.md) replaces duplicated notebook infrastructure. `bgp_example.py`
+The [shared v0.3.6 standard](https://github.com/Query-farm/vgi-example-notebooks/blob/v0.3.6/docs/standard.md) replaces duplicated notebook infrastructure. `bgp_example.py`
 validates parameters and presents returned results; worker calls and analytical
 transformations stay in visible SQL. Keep committed `charts/` SVGs with saved
 notebooks for GitHub rendering. Colab/Jupyter reruns emit native SVG; PNG review

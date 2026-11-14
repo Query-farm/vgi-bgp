@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "notebook_sha256": "731cc7884d87d8c94bc0669eb0941cc063c7efb089cd95e6bd41f9b470bbb26b",
+  "notebook_sha256": "175f0439a57e377ceec7173d2703546dcd4ab6f5d42c671802a390b4e92b5233",
   "catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
   "worker_revision": "v0.4.0",
   "status": "success",
-  "executed_at": "2026-11-14T18:17:39.024272+00:00",
+  "executed_at": "2026-11-14T18:51:38.013227+00:00",
   "engine": "Haybarn2.0.0rc11 / published VGI extension",
-  "command": "uv run --locked python artifacts/execute_with_receipts.py; invokes python -m vgi_notebooks.execute 01_a_withdrawal_belongs_to_a_peer.ipynb",
+  "command": "uv run --locked vgi-notebooks --timeout 300",
   "catalog_aliases": [
     "bgp"
   ],
@@ -22,7 +22,7 @@
       "id": "bootstrap",
       "status": "success",
       "execution_count": 2,
-      "source_sha256": "ec0046d4641f2c9dd6aec6aca4bcd93d5bb9919762a5a81b466ac94f03550af6",
+      "source_sha256": "7bdbd80e0ad4f7ab5b9ce7a320ba66fe49bd8bc3d92c0d74eaafa42d89991425",
       "outputs_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     {
@@ -165,5 +165,6 @@
       "source_sha256": "7d3ddd8506c3c97d204d644e483edd0105065411aa14e5b173b7a45e0707d2ce",
       "outputs_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     }
-  ]
+  ],
+  "presentation_update": "Shared tools0.3.6: linked worker identity/header/footer; analytical code unchanged; whole notebook executed again."
 }
