@@ -36,6 +36,12 @@ GROUP BY 1;
 > containment operators `<<=` (contained in) / `>>=` (contains) and prefix joins.
 > (DuckDB's `inet` extension has no `&&` operator — use `<<=` / `>>=`.)
 
+## Executable notebooks
+
+[A withdrawal belongs to a peer](notebooks/README.md) uses visible Haybarn SQL
+and synthetic MRT files to reconstruct routing observations and compare paths.
+Includes two charts, saved outputs and a locked notebook environment.
+
 ## Quick start
 
 Every [GitHub release](https://github.com/Query-farm/vgi-bgp/releases) ships a prebuilt worker binary. The `vgi` extension downloads the one for your platform, checks its SHA-256 and caches it, so there is nothing to install besides DuckDB:
