@@ -1,0 +1,385 @@
+{
+  "query": "SELECT * FROM duckdb_functions() WHERE database_name='bgp' ORDER BY schema_name,function_name,parameter_types",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "function_name",
+    "alias_of",
+    "function_type",
+    "description",
+    "comment",
+    "tags",
+    "return_type",
+    "parameters",
+    "parameter_types",
+    "varargs",
+    "macro_definition",
+    "has_side_effects",
+    "internal",
+    "extension_name",
+    "function_oid",
+    "examples",
+    "stability",
+    "categories"
+  ],
+  "rows": [
+    [
+      "bgp",
+      "22612",
+      "main",
+      "as_path_prepends",
+      null,
+      "scalar",
+      "Number of AS-path prepends (padded repeated ASNs)",
+      null,
+      {
+        "vgi.category": "AS-path analysis",
+        "vgi.doc_llm": "Return the number of AS-path prepends: extra occurrences of an ASN that immediately repeats its predecessor, i.e. an AS padding its own number to deprioritize a route. `[1,1,1,2]` has two prepends, `[1,2,3]` has none. NULL input is NULL.",
+        "vgi.doc_md": "Count of AS-path prepends, e.g. `as_path_prepends([1,1,1,2])` = 2.",
+        "vgi.example_queries": "[{\"description\":\"Count the prepended (padded) ASNs in a path (here 1).\",\"sql\":\"SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]);\"}]",
+        "vgi.keywords": "[\"as path prepends\",\"prepending\",\"padding\",\"traffic engineering\",\"as_path\"]",
+        "vgi.title": "AS-Path Prepend Count"
+      },
+      "BIGINT",
+      [
+        "as_path"
+      ],
+      [
+        "BIGINT[]"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22616,
+      [
+        "SELECT bgp.main.as_path_prepends([7018, 174, 174, 13335]);"
+      ],
+      "CONSISTENT",
+      []
+    ],
+    [
+      "bgp",
+      "22612",
+      "main",
+      "community_parse",
+      null,
+      "scalar",
+      "Parse a standard community 'asn:value' into a STRUCT(asn, value)",
+      null,
+      {
+        "vgi.category": "BGP communities",
+        "vgi.doc_llm": "Parse a standard BGP community string ('<asn>:<value>') into a `STRUCT(asn UINTEGER, value UINTEGER)`. Returns a NULL struct for anything that is not a plain two-part community \u2014 a large community ('a:b:c'), a well-known mnemonic ('NO_EXPORT'), or NULL input. Use it to filter or group routes by community without a regex.",
+        "vgi.doc_md": "Parse a standard community into (asn, value), e.g. `community_parse('65001:100')` = {asn: 65001, value: 100}.",
+        "vgi.example_queries": "[{\"description\":\"Split a standard community into {asn: 65001, value: 100}.\",\"sql\":\"SELECT bgp.main.community_parse('65001:100');\"}]",
+        "vgi.keywords": "[\"community parse\",\"bgp community\",\"asn value\",\"standard community\",\"tag\",\"decode\"]",
+        "vgi.title": "Parse BGP Community"
+      },
+      "STRUCT(asn UINTEGER, \"value\" UINTEGER)",
+      [
+        "raw"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22617,
+      [
+        "SELECT bgp.main.community_parse('65001:100');"
+      ],
+      "CONSISTENT",
+      []
+    ],
+    [
+      "bgp",
+      "22612",
+      "main",
+      "is_large_community",
+      null,
+      "scalar",
+      "Whether a community string is an RFC 8092 large community",
+      null,
+      {
+        "vgi.category": "BGP communities",
+        "vgi.doc_llm": "Return whether a community string is a large community (RFC 8092): exactly three colon-separated unsigned-integer parts, '<global>:<data1>:<data2>'. False for a standard 'a:b' community or a well-known mnemonic; NULL input is NULL.",
+        "vgi.doc_md": "Whether a community is a large community, e.g. `is_large_community('65001:1:2')` = true.",
+        "vgi.example_queries": "[{\"description\":\"Detect a large community (three numeric parts, so true).\",\"sql\":\"SELECT bgp.main.is_large_community('65001:1:2');\"}]",
+        "vgi.keywords": "[\"large community\",\"RFC 8092\",\"community type\",\"three part community\",\"classify\"]",
+        "vgi.title": "Large-Community Classifier"
+      },
+      "BOOLEAN",
+      [
+        "raw"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22618,
+      [
+        "SELECT bgp.main.is_large_community('65001:1:2');"
+      ],
+      "CONSISTENT",
+      []
+    ],
+    [
+      "bgp",
+      "22612",
+      "main",
+      "origin_asn",
+      null,
+      "scalar",
+      "The origin AS (last AS) of an AS path",
+      null,
+      {
+        "vgi.category": "AS-path analysis",
+        "vgi.doc_llm": "Return the origin AS of an AS path \u2014 the last (right-most) ASN, which announced the prefix. NULL for an empty or NULL path. Join the result against an RPKI/VRP table to validate route origins (route-origin validation lives in vgi-netflow, not here).",
+        "vgi.doc_md": "Origin AS of an AS path, e.g. `origin_asn([7018,174,13335])` = 13335.",
+        "vgi.example_queries": "[{\"description\":\"Get the origin AS that announced the prefix (here 13335).\",\"sql\":\"SELECT bgp.main.origin_asn([7018, 174, 13335]);\"}]",
+        "vgi.keywords": "[\"origin asn\",\"origin as\",\"route origin\",\"last as\",\"as_path\",\"RPKI\",\"hijack\"]",
+        "vgi.title": "AS Path Origin"
+      },
+      "UINTEGER",
+      [
+        "as_path"
+      ],
+      [
+        "BIGINT[]"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22619,
+      [
+        "SELECT bgp.main.origin_asn([7018, 174, 13335]);"
+      ],
+      "CONSISTENT",
+      []
+    ],
+    [
+      "bgp",
+      "22612",
+      "main",
+      "path_contains",
+      null,
+      "scalar",
+      "Whether an AS path traverses a given ASN",
+      null,
+      {
+        "vgi.category": "AS-path analysis",
+        "vgi.doc_llm": "Return whether an AS path traverses a given ASN anywhere along it. NULL if the path is NULL. Use it to find every route that passes through a suspect transit AS (leak detection).",
+        "vgi.doc_md": "Whether an AS path contains an ASN, e.g. `path_contains([7018,174,13335], 174)` = true.",
+        "vgi.example_queries": "[{\"description\":\"Test whether a path traverses AS 174 (here true).\",\"sql\":\"SELECT bgp.main.path_contains([7018, 174, 13335], 174);\"}]",
+        "vgi.keywords": "[\"path contains\",\"traverses\",\"transit as\",\"through asn\",\"as_path\",\"leak detection\"]",
+        "vgi.title": "AS Path Contains ASN"
+      },
+      "BOOLEAN",
+      [
+        "as_path",
+        "asn"
+      ],
+      [
+        "BIGINT[]",
+        "BIGINT"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22620,
+      [
+        "SELECT bgp.main.path_contains([7018, 174, 13335], 174);"
+      ],
+      "CONSISTENT",
+      []
+    ],
+    [
+      "bgp",
+      "22612",
+      "main",
+      "path_length",
+      null,
+      "scalar",
+      "Number of AS hops in an AS path",
+      null,
+      {
+        "vgi.category": "AS-path analysis",
+        "vgi.doc_llm": "Return the number of AS hops in an AS path (its length) \u2014 the `LIST(UINTEGER)` `as_path` column from read_rib / read_updates. An empty path is 0; NULL input is NULL. Use it to rank routes for leak/hijack triage (a suspiciously long or short path).",
+        "vgi.doc_md": "Number of AS hops in an AS path, e.g. `path_length([7018,174,13335])` = 3.",
+        "vgi.example_queries": "[{\"description\":\"Count the AS hops in a path (here 3).\",\"sql\":\"SELECT bgp.main.path_length([7018, 174, 13335]);\"}]",
+        "vgi.keywords": "[\"path length\",\"as path length\",\"hops\",\"route length\",\"as_path\",\"leak\",\"hijack\"]",
+        "vgi.title": "AS Path Length"
+      },
+      "BIGINT",
+      [
+        "as_path"
+      ],
+      [
+        "BIGINT[]"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22621,
+      [
+        "SELECT bgp.main.path_length([7018, 174, 13335]);"
+      ],
+      "CONSISTENT",
+      []
+    ],
+    [
+      "bgp",
+      "22612",
+      "main",
+      "peers",
+      null,
+      "table",
+      "List the distinct peers / collectors in an MRT file",
+      null,
+      {
+        "vgi.category": "MRT readers",
+        "vgi.doc_llm": "List the distinct BGP peers in an MRT file: one row per (peer_ip, peer_asn, collector) triple. For a TABLE_DUMP_V2 RIB it returns every peer in the PEER_INDEX_TABLE, with the RIB view name as the `collector`; for a BGP4MP update stream it returns each distinct peer that produced a message, and `collector` is NULL (a raw update stream carries no collector name). Unlike read_rib / read_updates this function never emits an `error` column and takes no `strict` option \u2014 a torn or truncated tail simply ends the enumeration. `src` is a path (local, glob, `s3://`, or `http(s)://`) or an inline `BLOB` of MRT bytes; `.gz`/`.bz2` auto-decompress. peer_ip is a DuckDB INET value (cast with `::INET`). Use it to enumerate vantage points before scanning a dump, or to join peer ASNs against attribution data.",
+        "vgi.doc_md": "List the distinct peers in an MRT file: peer_ip (INET), peer_asn, and collector (the RIB view name for a TABLE_DUMP_V2 RIB, NULL for a BGP4MP update stream). `src` is a path / glob / `s3://` / `http(s)://` URL or a `BLOB`; `.gz`/`.bz2` auto-decompress.",
+        "vgi.example_queries": "[{\"description\":\"List the peers in an inline TABLE_DUMP_V2 PEER_INDEX_TABLE.\",\"sql\":\"SELECT peer_asn, collector FROM bgp.main.peers(from_hex('68608200000d00010000003b000000000000000302c0000201c00002010000fde902c6336407c63364070000fdea030000000020010db80000000000000000000000010000fde968608200000d000400000079000000003020010db8abcd00010002686082000064800e1c0002011020010db8000000000000000000000001003020010db8abcd40031020010db8000000000000000000000001c0110e02030000fde90000fbf40000fc58400101004005040000006480040400000000c0200c0000fde9000000070000000968608200000d0002000000af0000000118cb007100020001686082000041800e0d00010104c63364070018cb0071400304c6336407c0110e02030000fdea0000fc010000fc00400101004005040000006480040400000000c00804fdea00c80000686082000054800e0d00010104c00002010018cb0071400304c0000201c0111202040000fde90000fbf40000fbf40000fc00400101004005040000006480040400000000c00804fde90064c0200c0000fde90000000100000002'));\"}]",
+        "vgi.keywords": "[\"peers\",\"collectors\",\"vantage points\",\"MRT\",\"PEER_INDEX_TABLE\",\"peer ASN\",\"peer IP\",\"RouteViews\",\"RIPE RIS\",\"table function\"]",
+        "vgi.result_columns_schema": "[{\"name\":\"peer_ip\",\"type\":\"STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)\",\"description\":\"The peer's IP address in DuckDB's INET physical layout; cast `::INET`.\"},{\"name\":\"peer_asn\",\"type\":\"UINTEGER\",\"description\":\"The peer's autonomous-system number.\"},{\"name\":\"collector\",\"type\":\"VARCHAR\",\"description\":\"The RIB view name (TABLE_DUMP_V2 PEER_INDEX_TABLE); NULL for a BGP4MP update stream, which carries no collector name.\"}]",
+        "vgi.title": "List MRT Peers / Collectors"
+      },
+      null,
+      [
+        "src",
+        "url_style",
+        "use_ssl",
+        "region",
+        "endpoint"
+      ],
+      [
+        "ANY",
+        "VARCHAR",
+        "BOOLEAN",
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22622,
+      [
+        "SELECT peer_asn, collector FROM bgp.main.peers(from_hex('68608200000d00010000003b000000000000000302c0000201c00002010000fde902c6336407c63364070000fdea030000000020010db80000000000000000000000010000fde968608200000d000400000079000000003020010db8abcd00010002686082000064800e1c0002011020010db8000000000000000000000001003020010db8abcd40031020010db8000000000000000000000001c0110e02030000fde90000fbf40000fc58400101004005040000006480040400000000c0200c0000fde9000000070000000968608200000d0002000000af0000000118cb007100020001686082000041800e0d00010104c63364070018cb0071400304c6336407c0110e02030000fdea0000fc010000fc00400101004005040000006480040400000000c00804fdea00c80000686082000054800e0d00010104c00002010018cb0071400304c0000201c0111202040000fde90000fbf40000fbf40000fc00400101004005040000006480040400000000c00804fde90064c0200c0000fde90000000100000002'));"
+      ],
+      null,
+      []
+    ],
+    [
+      "bgp",
+      "22612",
+      "main",
+      "read_rib",
+      null,
+      "table",
+      "Read an MRT TABLE_DUMP_V2 RIB snapshot into rows",
+      null,
+      {
+        "vgi.category": "MRT readers",
+        "vgi.doc_llm": "Scan an MRT TABLE_DUMP_V2 RIB snapshot (a RouteViews / RIPE RIS `rib.*` archive) into one row per (prefix, peer) RIB entry. `src` is a path \u2014 local, a glob, an `s3://` URL, or an `http(s)://` URL \u2014 or an inline `BLOB` of MRT bytes; gzip (`.gz`) and bzip2 (`.bz2`) inputs are decompressed transparently. Each row carries the route timestamp, RIB view name, the reporting peer (peer_ip INET, peer_asn), the prefix (INET), the AS path (`LIST(UINTEGER)`), origin ASN, next hop (INET), communities (`LIST(VARCHAR)` \u2014 standard and large), MED, local pref, atomic-aggregate flag, and aggregator ASN. prefix / peer_ip / next_hop are DuckDB INET values (cast with `::INET`), so prefix containment (`prefix::INET <<= '203.0.113.0/24'`) and joins against vgi-netflow / geoip work without parsing strings. A malformed record yields a row with NULL fields and a populated `error` column unless `strict => true`. This is the RIB counterpart of read_updates.",
+        "vgi.doc_md": "Scan an MRT TABLE_DUMP_V2 RIB dump into rows: timestamp, view_name, peer_ip (INET), peer_asn, prefix (INET), as_path (`LIST(UINTEGER)`), origin_asn, next_hop (INET), communities (`LIST(VARCHAR)`), med, local_pref, atomic_aggregate, aggregator_asn, and an `error` capture column. `src` is a path / glob / `s3://` / `http(s)://` URL or a `BLOB`; `.gz`/`.bz2` auto-decompress. Cast INET columns with `::INET` for containment.",
+        "vgi.example_queries": "[{\"description\":\"Scan an inline TABLE_DUMP_V2 RIB snapshot (3 entries) into rows.\",\"sql\":\"SELECT prefix, origin_asn, as_path FROM bgp.main.read_rib(from_hex('68608200000d00010000003b000000000000000302c0000201c00002010000fde902c6336407c63364070000fdea030000000020010db80000000000000000000000010000fde968608200000d000400000079000000003020010db8abcd00010002686082000064800e1c0002011020010db8000000000000000000000001003020010db8abcd40031020010db8000000000000000000000001c0110e02030000fde90000fbf40000fc58400101004005040000006480040400000000c0200c0000fde9000000070000000968608200000d0002000000af0000000118cb007100020001686082000041800e0d00010104c63364070018cb0071400304c6336407c0110e02030000fdea0000fc010000fc00400101004005040000006480040400000000c00804fdea00c80000686082000054800e0d00010104c00002010018cb0071400304c0000201c0111202040000fde90000fbf40000fbf40000fc00400101004005040000006480040400000000c00804fde90064c0200c0000fde90000000100000002'));\"}]",
+        "vgi.keywords": "[\"read rib\",\"MRT\",\"TABLE_DUMP_V2\",\"RouteViews\",\"RIPE RIS\",\"routing table\",\"BGP RIB\",\"prefix\",\"AS path\",\"origin ASN\",\"next hop\",\"communities\",\"INET\",\"route leak\",\"hijack\",\"table function\"]",
+        "vgi.result_columns_schema": "[{\"name\":\"timestamp\",\"type\":\"TIMESTAMP\",\"description\":\"Route timestamp from the MRT record header \u2014 when this RIB entry was captured.\"},{\"name\":\"view_name\",\"type\":\"VARCHAR\",\"description\":\"The RIB view / collector name from the TABLE_DUMP_V2 PEER_INDEX_TABLE.\"},{\"name\":\"peer_ip\",\"type\":\"STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)\",\"description\":\"The reporting peer's IP address in DuckDB's INET physical layout; cast `::INET`.\"},{\"name\":\"peer_asn\",\"type\":\"UINTEGER\",\"description\":\"The reporting peer's autonomous-system number.\"},{\"name\":\"prefix\",\"type\":\"STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)\",\"description\":\"The announced prefix in DuckDB's INET physical layout; cast `::INET` for containment tests (`<<=` / `>>=`).\"},{\"name\":\"as_path\",\"type\":\"UINTEGER[]\",\"description\":\"The AS path in path order \u2014 the origin AS that announced the prefix is last.\"},{\"name\":\"origin_asn\",\"type\":\"UINTEGER\",\"description\":\"The origin AS (last ASN in as_path) that announced the prefix.\"},{\"name\":\"next_hop\",\"type\":\"STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)\",\"description\":\"The BGP next-hop address in DuckDB's INET physical layout; cast `::INET`.\"},{\"name\":\"communities\",\"type\":\"VARCHAR[]\",\"description\":\"BGP communities as strings \u2014 standard `asn:value` and RFC 8092 large `global:data1:data2`.\"},{\"name\":\"med\",\"type\":\"UINTEGER\",\"description\":\"The MULTI_EXIT_DISC (MED) attribute, or NULL when the route carries none.\"},{\"name\":\"local_pref\",\"type\":\"UINTEGER\",\"description\":\"The LOCAL_PREF attribute, or NULL when the route carries none.\"},{\"name\":\"atomic_aggregate\",\"type\":\"BOOLEAN\",\"description\":\"Whether the ATOMIC_AGGREGATE attribute is set on the route.\"},{\"name\":\"aggregator_asn\",\"type\":\"UINTEGER\",\"description\":\"The AS that formed an aggregate route (AGGREGATOR attribute), or NULL.\"},{\"name\":\"error\",\"type\":\"VARCHAR\",\"description\":\"Decode error for a malformed record (all other columns NULL); NULL on a clean row. A malformed record instead aborts the scan when `strict => true`.\"}]",
+        "vgi.title": "Read MRT RIB Snapshot"
+      },
+      null,
+      [
+        "src",
+        "url_style",
+        "use_ssl",
+        "region",
+        "endpoint",
+        "strict"
+      ],
+      [
+        "ANY",
+        "VARCHAR",
+        "BOOLEAN",
+        "VARCHAR",
+        "VARCHAR",
+        "BOOLEAN"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22623,
+      [
+        "SELECT prefix, origin_asn, as_path FROM bgp.main.read_rib(from_hex('68608200000d00010000003b000000000000000302c0000201c00002010000fde902c6336407c63364070000fdea030000000020010db80000000000000000000000010000fde968608200000d000400000079000000003020010db8abcd00010002686082000064800e1c0002011020010db8000000000000000000000001003020010db8abcd40031020010db8000000000000000000000001c0110e02030000fde90000fbf40000fc58400101004005040000006480040400000000c0200c0000fde9000000070000000968608200000d0002000000af0000000118cb007100020001686082000041800e0d00010104c63364070018cb0071400304c6336407c0110e02030000fdea0000fc010000fc00400101004005040000006480040400000000c00804fdea00c80000686082000054800e0d00010104c00002010018cb0071400304c0000201c0111202040000fde90000fbf40000fbf40000fc00400101004005040000006480040400000000c00804fde90064c0200c0000fde90000000100000002'));"
+      ],
+      null,
+      []
+    ],
+    [
+      "bgp",
+      "22612",
+      "main",
+      "read_updates",
+      null,
+      "table",
+      "Read an MRT BGP4MP update stream into rows",
+      null,
+      {
+        "vgi.category": "MRT readers",
+        "vgi.doc_llm": "Scan an MRT BGP4MP update stream (a RouteViews / RIPE RIS `updates.*` archive) into one row per BGP message: a prefix announcement, a withdrawal, or an FSM state change. `src` is a path \u2014 local, a glob, an `s3://` URL, or an `http(s)://` URL \u2014 or an inline `BLOB` of MRT bytes; gzip (`.gz`) and bzip2 (`.bz2`) inputs are decompressed transparently. Each row carries the timestamp, the reporting peer (peer_ip INET, peer_asn), the message_type ('announce' / 'withdraw' / 'state_change'), the prefix (INET), AS path (`LIST(UINTEGER)`), origin ASN, next hop (INET), communities (`LIST(VARCHAR)`), and \u2014 for state changes \u2014 old_state and new_state. prefix / peer_ip / next_hop are DuckDB INET values (cast with `::INET`) so containment and prefix joins work without parsing strings. Announcements and withdrawals stay in one stream so RIB churn can be reconstructed over time. A malformed record yields a row with NULL fields and a populated `error` column unless `strict => true`. This is the update-stream counterpart of read_rib.",
+        "vgi.doc_md": "Scan an MRT BGP4MP update stream into rows: timestamp, peer_ip (INET), peer_asn, message_type (announce/withdraw/state_change), prefix (INET), as_path (`LIST(UINTEGER)`), origin_asn, next_hop (INET), communities (`LIST(VARCHAR)`), old_state, new_state, and an `error` capture column. `src` is a path / glob / `s3://` / `http(s)://` URL or a `BLOB`; `.gz`/`.bz2` auto-decompress. Cast INET columns with `::INET` for containment.",
+        "vgi.example_queries": "[{\"description\":\"Count announce / withdraw / state-change messages in an inline BGP4MP update stream.\",\"sql\":\"SELECT message_type, count(*) FROM bgp.main.read_updates(from_hex('68608200001100040000007f000000000000fde90000000000000001c000020100000000ffffffffffffffffffffffffffffffff00670200000050800e0d00010104c00002010018cb0071400304c0000201c0110e02030000fde90000fbf40000fc00400101004005040000006480040400000000c00804fde90064c0200c0000fde90000000100000002686082010011000400000098000000000000fde9000000000000000220010db800000000000000000000000100000000000000000000000000000000ffffffffffffffffffffffffffffffff00680200000051800e1c0002011020010db8000000000000000000000001003020010db8abcd40031020010db8000000000000000000000001c0110a02020000fde90000fc58400101004005040000006480040400000000686082020011000400000039000000000000fde90000000000000001c000020100000000ffffffffffffffffffffffffffffffff0021020000000a800f0700010118cb0071')) GROUP BY 1;\"}]",
+        "vgi.keywords": "[\"read updates\",\"MRT\",\"BGP4MP\",\"RouteViews\",\"RIPE RIS\",\"announcement\",\"withdrawal\",\"state change\",\"prefix\",\"AS path\",\"communities\",\"INET\",\"RIB churn\",\"route leak\",\"table function\"]",
+        "vgi.result_columns_schema": "[{\"name\":\"timestamp\",\"type\":\"TIMESTAMP\",\"description\":\"Message timestamp from the MRT record header.\"},{\"name\":\"peer_ip\",\"type\":\"STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)\",\"description\":\"The reporting peer's IP address in DuckDB's INET physical layout; cast `::INET`.\"},{\"name\":\"peer_asn\",\"type\":\"UINTEGER\",\"description\":\"The reporting peer's autonomous-system number.\"},{\"name\":\"message_type\",\"type\":\"VARCHAR\",\"description\":\"The message kind: 'announce', 'withdraw', or 'state_change'.\"},{\"name\":\"prefix\",\"type\":\"STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)\",\"description\":\"The announced or withdrawn prefix in DuckDB's INET physical layout; cast `::INET`. NULL for a state_change message.\"},{\"name\":\"as_path\",\"type\":\"UINTEGER[]\",\"description\":\"The AS path (origin AS last) for an announcement; NULL for a withdrawal or state change.\"},{\"name\":\"origin_asn\",\"type\":\"UINTEGER\",\"description\":\"The origin AS (last ASN in as_path) for an announcement; NULL otherwise.\"},{\"name\":\"next_hop\",\"type\":\"STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)\",\"description\":\"The BGP next-hop address for an announcement in DuckDB's INET physical layout; cast `::INET`.\"},{\"name\":\"communities\",\"type\":\"VARCHAR[]\",\"description\":\"BGP communities as strings (standard `asn:value` and RFC 8092 large) for an announcement.\"},{\"name\":\"old_state\",\"type\":\"USMALLINT\",\"description\":\"The prior BGP FSM state for a state_change message; NULL otherwise.\"},{\"name\":\"new_state\",\"type\":\"USMALLINT\",\"description\":\"The new BGP FSM state for a state_change message; NULL otherwise.\"},{\"name\":\"error\",\"type\":\"VARCHAR\",\"description\":\"Decode error for a malformed record (all other columns NULL); NULL on a clean row. A malformed record instead aborts the scan when `strict => true`.\"}]",
+        "vgi.title": "Read MRT BGP4MP Update Stream"
+      },
+      null,
+      [
+        "src",
+        "url_style",
+        "use_ssl",
+        "region",
+        "endpoint",
+        "strict"
+      ],
+      [
+        "ANY",
+        "VARCHAR",
+        "BOOLEAN",
+        "VARCHAR",
+        "VARCHAR",
+        "BOOLEAN"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22624,
+      [
+        "SELECT message_type, count(*) FROM bgp.main.read_updates(from_hex('68608200001100040000007f000000000000fde90000000000000001c000020100000000ffffffffffffffffffffffffffffffff00670200000050800e0d00010104c00002010018cb0071400304c0000201c0110e02030000fde90000fbf40000fc00400101004005040000006480040400000000c00804fde90064c0200c0000fde90000000100000002686082010011000400000098000000000000fde9000000000000000220010db800000000000000000000000100000000000000000000000000000000ffffffffffffffffffffffffffffffff00680200000051800e1c0002011020010db8000000000000000000000001003020010db8abcd40031020010db8000000000000000000000001c0110a02020000fde90000fc58400101004005040000006480040400000000686082020011000400000039000000000000fde90000000000000001c000020100000000ffffffffffffffffffffffffffffffff0021020000000a800f0700010118cb0071')) GROUP BY 1;"
+      ],
+      null,
+      []
+    ]
+  ]
+}

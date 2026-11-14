@@ -1,0 +1,114 @@
+{
+  "status": "passed",
+  "identical_rows": 3,
+  "exports": [
+    {
+      "catalog": "released",
+      "query": "SELECT timestamp,peer_asn,prefix::INET::VARCHAR AS prefix,as_path,communities FROM bgp.main.example_rib ORDER BY peer_asn,prefix",
+      "columns": [
+        "timestamp",
+        "peer_asn",
+        "prefix",
+        "as_path",
+        "communities"
+      ],
+      "rows": [
+        [
+          "2025-06-29 00:00:00",
+          65001,
+          "2001:db8:abcd::/48",
+          [
+            65001,
+            64500,
+            64600
+          ],
+          [
+            "65001:7:9"
+          ]
+        ],
+        [
+          "2025-06-29 00:00:00",
+          65001,
+          "203.0.113.0/24",
+          [
+            65001,
+            64500,
+            64500,
+            64512
+          ],
+          [
+            "65001:100",
+            "65001:1:2"
+          ]
+        ],
+        [
+          "2025-06-29 00:00:00",
+          65002,
+          "203.0.113.0/24",
+          [
+            65002,
+            64513,
+            64512
+          ],
+          [
+            "65002:200"
+          ]
+        ]
+      ]
+    },
+    {
+      "catalog": "current",
+      "query": "SELECT timestamp,peer_asn,prefix::INET::VARCHAR AS prefix,as_path,communities FROM bgp.main.example_rib ORDER BY peer_asn,prefix",
+      "columns": [
+        "timestamp",
+        "peer_asn",
+        "prefix",
+        "as_path",
+        "communities"
+      ],
+      "rows": [
+        [
+          "2025-06-29 00:00:00",
+          65001,
+          "2001:db8:abcd::/48",
+          [
+            65001,
+            64500,
+            64600
+          ],
+          [
+            "65001:7:9"
+          ]
+        ],
+        [
+          "2025-06-29 00:00:00",
+          65001,
+          "203.0.113.0/24",
+          [
+            65001,
+            64500,
+            64500,
+            64512
+          ],
+          [
+            "65001:100",
+            "65001:1:2"
+          ]
+        ],
+        [
+          "2025-06-29 00:00:00",
+          65002,
+          "203.0.113.0/24",
+          [
+            65002,
+            64513,
+            64512
+          ],
+          [
+            "65002:200"
+          ]
+        ]
+      ]
+    }
+  ]
+}

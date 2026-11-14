@@ -1,0 +1,85 @@
+{
+  "query": "DESCRIBE bgp.main.example_rib",
+  "columns": [
+    "column_name",
+    "column_type",
+    "null",
+    "key",
+    "default",
+    "extra"
+  ],
+  "rows": [
+    [
+      "timestamp",
+      "TIMESTAMP",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "view_name",
+      "VARCHAR",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "peer_ip",
+      "STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "peer_asn",
+      "UINTEGER",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "prefix",
+      "STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "origin_asn",
+      "UINTEGER",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "as_path",
+      "UINTEGER[]",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "next_hop",
+      "STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT)",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "communities",
+      "VARCHAR[]",
+      "YES",
+      null,
+      null,
+      null
+    ]
+  ]
+}

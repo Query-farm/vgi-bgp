@@ -1,0 +1,387 @@
+{
+  "schema_version": 1,
+  "catalogs": {
+    "released": {
+      "path": "coverage/catalog-released.json",
+      "sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+        "notes": "Actual complete nine functions,zero physical tables,one view. No auth/write exclusions. Current example_rib adds peer_ip and reorders columns; full signatures preserve drift. Reviewed notebook projection uses named columns common to both interfaces. Reader/scalar signatures match."
+      }
+    },
+    "current": {
+      "path": "coverage/catalog-current.json",
+      "sha256": "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "catalog_sha256": "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b",
+        "notes": "Actual complete nine functions,zero physical tables,one view. No auth/write exclusions. Current example_rib adds peer_ip and reorders columns; full signatures preserve drift. Reviewed notebook projection uses named columns common to both interfaces. Reader/scalar signatures match."
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "path": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "sha256": "731cc7884d87d8c94bc0669eb0941cc063c7efb089cd95e6bd41f9b470bbb26b",
+      "execution": {
+        "path": "coverage/run-01.json",
+        "sha256": "79c773ef51a25cc81205a758d47e9e383b609e9f42fbcb0ee8bd67466afbbe88"
+      }
+    },
+    {
+      "path": "02_community_shape_comes_before_policy.ipynb",
+      "sha256": "e2a5e19a927318a2bce540b5044b8930688b657902b53cc688f874fa25bb673b",
+      "execution": {
+        "path": "coverage/run-02.json",
+        "sha256": "80e2e7e8a1224dc8e759a9f8e66aeb9355822e99cfbb8083ac1b19b52d27f537"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "object": {
+        "schema": "main",
+        "name": "read_rib"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "sql": [
+        {
+          "cell": "read-inputs",
+          "reference": "bgp.main.read_rib"
+        }
+      ],
+      "narrative_cells": [
+        "quality-story"
+      ],
+      "result_cells": [
+        "quality-finding"
+      ],
+      "interpretation_cells": [
+        "quality-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "731cc7884d87d8c94bc0669eb0941cc063c7efb089cd95e6bd41f9b470bbb26b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Decode the complete seed and a deliberately truncated control separately.",
+        "finding": "The complete RIB seeds three paths; the damaged file yields one decoded row and one error row, excluded from reconstruction."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "read_updates"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "sql": [
+        {
+          "cell": "read-inputs",
+          "reference": "bgp.main.read_updates"
+        }
+      ],
+      "narrative_cells": [
+        "quality-story"
+      ],
+      "result_cells": [
+        "timeline-finding"
+      ],
+      "interpretation_cells": [
+        "timeline-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "731cc7884d87d8c94bc0669eb0941cc063c7efb089cd95e6bd41f9b470bbb26b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Decode announcements and withdrawal before reconstructing latest peer-specific state.",
+        "finding": "The fixed stream changes two paths, then withdraws one peer observation. Active paths fall from three to two while two distinct prefixes remain."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "peers"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "sql": [
+        {
+          "cell": "peer-query",
+          "reference": "bgp.main.peers"
+        }
+      ],
+      "narrative_cells": [
+        "peer-story"
+      ],
+      "result_cells": [
+        "peer-finding"
+      ],
+      "interpretation_cells": [
+        "peer-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "731cc7884d87d8c94bc0669eb0941cc063c7efb089cd95e6bd41f9b470bbb26b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Join decoded route rows to the file peer index using IP and ASN together.",
+        "finding": "Three peer IP/ASN pairs share only two ASNs. All three have a seed route; missing collector metadata remains missing."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "origin_asn"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "sql": [
+        {
+          "cell": "seed-query",
+          "reference": "bgp.main.origin_asn"
+        }
+      ],
+      "narrative_cells": [
+        "seed-story"
+      ],
+      "result_cells": [
+        "seed-finding"
+      ],
+      "interpretation_cells": [
+        "seed-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "731cc7884d87d8c94bc0669eb0941cc063c7efb089cd95e6bd41f9b470bbb26b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Compare the last AS in each path with the decoded origin field.",
+        "finding": "All three decoded origin fields agree with the helper, without establishing origin authorization or address ownership."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "path_length"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "sql": [
+        {
+          "cell": "paths-query",
+          "reference": "bgp.main.path_length"
+        }
+      ],
+      "narrative_cells": [
+        "path-story"
+      ],
+      "result_cells": [
+        "paths-finding"
+      ],
+      "interpretation_cells": [
+        "paths-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "731cc7884d87d8c94bc0669eb0941cc063c7efb089cd95e6bd41f9b470bbb26b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Compare seed and selected paths while retaining missing paths distinctly.",
+        "finding": "At +1s two paths shorten; at +2s one is withdrawn and has NULL length, not zero hops."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "as_path_prepends"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "sql": [
+        {
+          "cell": "paths-query",
+          "reference": "bgp.main.as_path_prepends"
+        }
+      ],
+      "narrative_cells": [
+        "path-story"
+      ],
+      "result_cells": [
+        "paths-finding"
+      ],
+      "interpretation_cells": [
+        "paths-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "731cc7884d87d8c94bc0669eb0941cc063c7efb089cd95e6bd41f9b470bbb26b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Separate adjacent repeated AS entries from distinct networks during path comparison.",
+        "finding": "The seed IPv4 path has an adjacent repeated AS64500; the changed path removes that prepend. A length difference does not prove latency improvement."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "path_contains"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "sql": [
+        {
+          "cell": "paths-query",
+          "reference": "bgp.main.path_contains"
+        }
+      ],
+      "narrative_cells": [
+        "path-story"
+      ],
+      "result_cells": [
+        "paths-finding"
+      ],
+      "interpretation_cells": [
+        "paths-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "731cc7884d87d8c94bc0669eb0941cc063c7efb089cd95e6bd41f9b470bbb26b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Count membership of AS64500 without counting repeated occurrences as extra matching routes.",
+        "finding": "Two seed paths include AS64500; one remains at +1s and none at +2s. Withdrawal membership is NULL, not a current route absence claim."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "example_rib"
+      },
+      "notebook": "02_community_shape_comes_before_policy.ipynb",
+      "sql": [
+        {
+          "cell": "view-query",
+          "reference": "bgp.main.example_rib"
+        }
+      ],
+      "narrative_cells": [
+        "view-story"
+      ],
+      "result_cells": [
+        "view-finding"
+      ],
+      "interpretation_cells": [
+        "view-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "e2a5e19a927318a2bce540b5044b8930688b657902b53cc688f874fa25bb673b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Use the built-in decoded sample relation as a fixed route population for annotation analysis.",
+        "finding": "Three synthetic route observations carry four labels. The projection uses release/current common named columns and explicitly avoids the added current peer_ip column."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "community_parse"
+      },
+      "notebook": "02_community_shape_comes_before_policy.ipynb",
+      "sql": [
+        {
+          "cell": "classify-query",
+          "reference": "bgp.main.community_parse"
+        }
+      ],
+      "narrative_cells": [
+        "shape-story"
+      ],
+      "result_cells": [
+        "selection-finding"
+      ],
+      "interpretation_cells": [
+        "selection-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "e2a5e19a927318a2bce540b5044b8930688b657902b53cc688f874fa25bb673b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Parse standard labels before filtering numeric administrator fields.",
+        "finding": "Selecting65001 finds three labels on two routes, while standard parsing alone finds only one of those routes. A valid large label returns NULL from the standard parser."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "is_large_community"
+      },
+      "notebook": "02_community_shape_comes_before_policy.ipynb",
+      "sql": [
+        {
+          "cell": "classify-query",
+          "reference": "bgp.main.is_large_community"
+        }
+      ],
+      "narrative_cells": [
+        "shape-story"
+      ],
+      "result_cells": [
+        "selection-finding"
+      ],
+      "interpretation_cells": [
+        "selection-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T18:17:45.313643+00:00",
+        "notebook_sha256": "e2a5e19a927318a2bce540b5044b8930688b657902b53cc688f874fa25bb673b",
+        "catalog_sha256": [
+          "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+          "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b"
+        ],
+        "purpose": "Recognize large labels before reading their global administrator component.",
+        "finding": "The two three-part labels are retained alongside two standard labels. Classification does not decode operator policy or prove enforcement."
+      }
+    }
+  ]
+}

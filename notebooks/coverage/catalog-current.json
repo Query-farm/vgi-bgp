@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "repository": "Query-farm/vgi-bgp",
+  "revision": "1db8eed62f15af01470efb1daaefde37fd321c90",
+  "captured_at": "2026-11-14T18:17:22.940271+00:00",
+  "default_schema": "main",
+  "scope": "all_public_functions_and_tables",
+  "complete": true,
+  "evidence": [
+    {
+      "path": "coverage/functions-current.json",
+      "sha256": "22e6562625852158042e355879c884ba0ae648638ab2037800d884a1d726a871",
+      "description": "Complete worker-filtered runtime export"
+    },
+    {
+      "path": "coverage/tables-current.json",
+      "sha256": "9fd88cac806244e09511da9a63fb147799f4536d091c87b0b029a08fbc3bf44d",
+      "description": "Complete worker-filtered runtime export"
+    },
+    {
+      "path": "coverage/views-current.json",
+      "sha256": "04830272ddd7ad41f0d7d9af9d027ba21057da64807dcdb8dcd8300b1f11221a",
+      "description": "Complete worker-filtered runtime export"
+    },
+    {
+      "path": "coverage/arguments-current.json",
+      "sha256": "df61ea517454191ae1e162abee69cc534cdd9b8a39d2ac077d77c551d46f7518",
+      "description": "Complete worker-filtered runtime export"
+    },
+    {
+      "path": "coverage/view-columns-current.json",
+      "sha256": "84654c379e6ccf1ac5f9bbf1be764d96ee36a8ebf75ccedf7ba040d6b465bc2a",
+      "description": "Full DESCRIBE of example_rib view; current adds peer_ip"
+    },
+    {
+      "path": "coverage/view-projection-compatibility.json",
+      "sha256": "e12792592d88c0001f3b5393b99c9e65958045e6fc656936a8db9c60ac2001af",
+      "description": "Actual common named-column view projection executed against release and current; all three rows identical"
+    }
+  ],
+  "objects": [
+    {
+      "schema": "main",
+      "name": "as_path_prepends",
+      "kind": "function",
+      "signatures": [
+        "as_path_prepends(BIGINT[]) -> BIGINT"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "community_parse",
+      "kind": "function",
+      "signatures": [
+        "community_parse(VARCHAR) -> STRUCT(asn UINTEGER, \"value\" UINTEGER)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "is_large_community",
+      "kind": "function",
+      "signatures": [
+        "is_large_community(VARCHAR) -> BOOLEAN"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "origin_asn",
+      "kind": "function",
+      "signatures": [
+        "origin_asn(BIGINT[]) -> UINTEGER"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "path_contains",
+      "kind": "function",
+      "signatures": [
+        "path_contains(BIGINT[], BIGINT) -> BOOLEAN"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "path_length",
+      "kind": "function",
+      "signatures": [
+        "path_length(BIGINT[]) -> BIGINT"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "peers",
+      "kind": "function",
+      "signatures": [
+        "peers(ANY, VARCHAR, BOOLEAN, VARCHAR, VARCHAR) -> TABLE"
+      ],
+      "authentication": "optional",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "read_rib",
+      "kind": "function",
+      "signatures": [
+        "read_rib(ANY, VARCHAR, BOOLEAN, VARCHAR, VARCHAR, BOOLEAN) -> TABLE"
+      ],
+      "authentication": "optional",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "read_updates",
+      "kind": "function",
+      "signatures": [
+        "read_updates(ANY, VARCHAR, BOOLEAN, VARCHAR, VARCHAR, BOOLEAN) -> TABLE"
+      ],
+      "authentication": "optional",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "example_rib",
+      "kind": "table",
+      "signatures": [
+        "VIEW(timestamp TIMESTAMP, view_name VARCHAR, peer_ip STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT), peer_asn UINTEGER, prefix STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT), origin_asn UINTEGER, as_path UINTEGER[], next_hop STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT), communities VARCHAR[])"
+      ],
+      "authentication": "none",
+      "access": "read"
+    }
+  ],
+  "runtime": "Haybarn 2.0.0rc11",
+  "launch": "Fresh cargo release build of current public source; validation only",
+  "review_notes": "Actual nine functions,zero physical tables,one public example_rib view=ten logical surfaces. All registrations checked. read_rib/read_updates/peers also accept remote sources, but these examples use local fixture/blob inputs. Current source adds peer_ip to example_rib and composed example metadata. Selected view projection uses only common columns; full signatures preserve the drift."
+}

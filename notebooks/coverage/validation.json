@@ -1,0 +1,729 @@
+{
+  "schema_version": 1,
+  "status": "met",
+  "meets_target": true,
+  "catalogs": {
+    "released": {
+      "catalog_status": "verified",
+      "revision": "v0.4.0",
+      "catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace",
+      "collection_reconciled": true,
+      "denominator": 10,
+      "observed_objects": 10,
+      "required": 10,
+      "verified_count": 10,
+      "candidate_count": 0,
+      "fraction": 1.0,
+      "meets_target": true,
+      "exact_runtime_count": 10,
+      "runtime_revisions": [
+        "v0.4.0"
+      ],
+      "covered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "as_path_prepends"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "community_parse"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "example_rib"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "is_large_community"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "origin_asn"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "path_contains"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "path_length"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "peers"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "read_rib"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "read_updates"
+        }
+      ],
+      "uncovered": [],
+      "objects": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "as_path_prepends",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "as_path_prepends(BIGINT[]) -> BIGINT"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "community_parse",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "community_parse(VARCHAR) -> STRUCT(asn UINTEGER, \"value\" UINTEGER)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "example_rib",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "VIEW(timestamp TIMESTAMP, view_name VARCHAR, prefix STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT), peer_asn UINTEGER, origin_asn UINTEGER, as_path UINTEGER[], next_hop STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT), communities VARCHAR[])"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "is_large_community",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "is_large_community(VARCHAR) -> BOOLEAN"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "origin_asn",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "origin_asn(BIGINT[]) -> UINTEGER"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "path_contains",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "path_contains(BIGINT[], BIGINT) -> BOOLEAN"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "path_length",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "path_length(BIGINT[]) -> BIGINT"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "peers",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "peers(ANY, VARCHAR, BOOLEAN, VARCHAR, VARCHAR) -> TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "optional"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "read_rib",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "read_rib(ANY, VARCHAR, BOOLEAN, VARCHAR, VARCHAR, BOOLEAN) -> TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "optional"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "read_updates",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "read_updates(ANY, VARCHAR, BOOLEAN, VARCHAR, VARCHAR, BOOLEAN) -> TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "optional"
+          ]
+        }
+      ],
+      "issues": []
+    },
+    "current": {
+      "catalog_status": "verified",
+      "revision": "1db8eed62f15af01470efb1daaefde37fd321c90",
+      "catalog_sha256": "966508be667e1c2e585c49c80d497263e8a241c20eb96fa70a7d473a2908213b",
+      "collection_reconciled": true,
+      "denominator": 10,
+      "observed_objects": 10,
+      "required": 10,
+      "verified_count": 10,
+      "candidate_count": 0,
+      "fraction": 1.0,
+      "meets_target": true,
+      "exact_runtime_count": 0,
+      "runtime_revisions": [
+        "v0.4.0"
+      ],
+      "covered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "as_path_prepends"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "community_parse"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "example_rib"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "is_large_community"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "origin_asn"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "path_contains"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "path_length"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "peers"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "read_rib"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "read_updates"
+        }
+      ],
+      "uncovered": [],
+      "objects": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "as_path_prepends",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "as_path_prepends(BIGINT[]) -> BIGINT"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "community_parse",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "community_parse(VARCHAR) -> STRUCT(asn UINTEGER, \"value\" UINTEGER)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "example_rib",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "VIEW(timestamp TIMESTAMP, view_name VARCHAR, peer_ip STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT), peer_asn UINTEGER, prefix STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT), origin_asn UINTEGER, as_path UINTEGER[], next_hop STRUCT(ip_type UTINYINT, address HUGEINT, mask USMALLINT), communities VARCHAR[])"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "is_large_community",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "is_large_community(VARCHAR) -> BOOLEAN"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "origin_asn",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "origin_asn(BIGINT[]) -> UINTEGER"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "path_contains",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "path_contains(BIGINT[], BIGINT) -> BOOLEAN"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "path_length",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "path_length(BIGINT[]) -> BIGINT"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "peers",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "peers(ANY, VARCHAR, BOOLEAN, VARCHAR, VARCHAR) -> TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "optional"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "read_rib",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "read_rib(ANY, VARCHAR, BOOLEAN, VARCHAR, VARCHAR, BOOLEAN) -> TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "optional"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "read_updates",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "read_updates(ANY, VARCHAR, BOOLEAN, VARCHAR, VARCHAR, BOOLEAN) -> TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "optional"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  "interface_drift": {
+    "known": true,
+    "current_only": [],
+    "released_only": [],
+    "changed": [
+      {
+        "schema": [
+          "main"
+        ],
+        "name": "example_rib"
+      }
+    ]
+  },
+  "notebooks": {
+    "01_a_withdrawal_belongs_to_a_peer.ipynb": {
+      "verified": true,
+      "issues": []
+    },
+    "02_community_shape_comes_before_policy.ipynb": {
+      "verified": true,
+      "issues": []
+    }
+  },
+  "examples": [
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "read_rib"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "read_updates"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "peers"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "origin_asn"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "path_length"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "as_path_prepends"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "path_contains"
+      },
+      "notebook": "01_a_withdrawal_belongs_to_a_peer.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "example_rib"
+      },
+      "notebook": "02_community_shape_comes_before_policy.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "community_parse"
+      },
+      "notebook": "02_community_shape_comes_before_policy.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "is_large_community"
+      },
+      "notebook": "02_community_shape_comes_before_policy.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "b2825b50077bfb8213004b31113e33c5ff770785fc0dd8dabba6605765984ace"
+    }
+  ],
+  "issues": []
+}
