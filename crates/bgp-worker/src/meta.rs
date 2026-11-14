@@ -11,7 +11,8 @@
 //! the catalog object only (VGI139), whose `source_url` field points at the repo.
 
 /// A tiny self-contained MRT `TABLE_DUMP_V2` RIB snapshot (3 RIB entries:
-/// `192.0.2.0/24`, `2001:db8:abcd:1::/64`, `2001:db8:abcd:4003::/64`), as a hex
+/// `2001:db8:abcd::/48` via peer 2001:db8::1, and `203.0.113.0/24` via peers
+/// 198.51.100.7 and 192.0.2.1 — the last with a prepended path), as a hex
 /// string. Embedding it lets the catalog and `read_rib` / `peers` example
 /// queries run as `from_hex(RIB_MRT_HEX)` — fully self-contained, so the
 /// vgi-lint sandbox executes them without a `data/*.mrt` file on disk or
@@ -23,6 +24,85 @@ pub const RIB_MRT_HEX: &str = "68608200000d00010000003b000000000000000302c000020
 /// Lets the `read_updates` example run as `from_hex(UPD_MRT_HEX)` without a file.
 /// Mirrors `data/updates.mrt`.
 pub const UPD_MRT_HEX: &str = "68608200001100040000007f000000000000fde90000000000000001c000020100000000ffffffffffffffffffffffffffffffff00670200000050800e0d00010104c00002010018cb0071400304c0000201c0110e02030000fde90000fbf40000fc00400101004005040000006480040400000000c00804fde90064c0200c0000fde90000000100000002686082010011000400000098000000000000fde9000000000000000220010db800000000000000000000000100000000000000000000000000000000ffffffffffffffffffffffffffffffff00680200000051800e1c0002011020010db8000000000000000000000001003020010db8abcd40031020010db8000000000000000000000001c0110a02020000fde90000fc58400101004005040000006480040400000000686082020011000400000039000000000000fde90000000000000001c000020100000000ffffffffffffffffffffffffffffffff0021020000000a800f0700010118cb0071";
+
+/// Composed examples: each combines two or more of the worker's own objects in
+/// one query over the built-in fixtures (offline, deterministic, no `LOAD inet` —
+/// the INET structs compare by value). The RIB side reads the `example_rib` view
+/// (the same RIB fixture) rather than inlining `RIB_MRT_HEX` again, which keeps
+/// the schema-level example list under VGI417's size bound. Defined once here
+/// and referenced from the schema-level `vgi.example_queries` and from the
+/// driving object's example list.
+///
+/// RIB routes that the later update stream withdraws (same peer + prefix):
+/// `example_rib` (the RIB fixture) JOIN `read_updates`. Driven by `read_updates`.
+pub fn composed_withdrawn_routes() -> (&'static str, String) {
+    (
+        "Join the built-in sample RIB routes (example_rib) to the inline update stream on peer \
+         and prefix to find which RIB routes are later withdrawn, and when (one route: peer AS \
+         65001, origin AS 64512, withdrawn at 00:00:02).",
+        format!(
+            "SELECT r.peer_asn, r.origin_asn, r.as_path, u.timestamp AS withdrawn_at \
+             FROM bgp.main.example_rib AS r \
+             JOIN bgp.main.read_updates(from_hex('{upd}')) AS u \
+             ON u.peer_ip = r.peer_ip AND u.prefix = r.prefix \
+             WHERE u.message_type = 'withdraw' ORDER BY withdrawn_at, r.peer_asn;",
+            upd = UPD_MRT_HEX,
+        ),
+    )
+}
+
+/// RIB-vs-update path diff with hop / prepend counts: `example_rib` JOIN
+/// `read_updates`, scored by `path_length` + `as_path_prepends`. Driven by
+/// `path_length` (listed there; `read_rib`'s own examples must call it, VGI504).
+pub fn composed_path_changes() -> (&'static str, String) {
+    (
+        "Diff the built-in sample RIB routes (example_rib) against announcements in the inline \
+         update stream: for each peer + prefix announced with a different AS path than the RIB \
+         held, compare hop count (path_length) and prepends (as_path_prepends) before and after \
+         (both paths got one hop shorter; one lost its prepend).",
+        format!(
+            "SELECT r.peer_asn, r.origin_asn, r.as_path AS rib_path, u.as_path AS update_path, \
+             bgp.main.path_length(r.as_path) AS rib_hops, \
+             bgp.main.path_length(u.as_path) AS update_hops, \
+             bgp.main.as_path_prepends(r.as_path) AS rib_prepends, \
+             bgp.main.as_path_prepends(u.as_path) AS update_prepends \
+             FROM bgp.main.example_rib AS r \
+             JOIN bgp.main.read_updates(from_hex('{upd}')) AS u \
+             ON u.peer_ip = r.peer_ip AND u.prefix = r.prefix \
+             WHERE u.message_type = 'announce' AND u.as_path <> r.as_path \
+             ORDER BY r.origin_asn, r.peer_asn;",
+            upd = UPD_MRT_HEX,
+        ),
+    )
+}
+
+/// Decode the standard communities on every RIB route: unnest `example_rib`'s
+/// communities, drop large ones with `is_large_community`, split the rest with
+/// `community_parse`. Driven by `community_parse`.
+pub fn composed_route_communities() -> (&'static str, String) {
+    (
+        "Unnest the communities on every built-in sample RIB route (example_rib), skip RFC 8092 \
+         large communities with is_large_community, and split each standard one into its tagging \
+         ASN and value with community_parse.",
+        "SELECT r.peer_asn, r.origin_asn, c.community, \
+             bgp.main.community_parse(c.community).asn AS tagger_asn, \
+             bgp.main.community_parse(c.community).value AS tag_value \
+             FROM bgp.main.example_rib AS r \
+             CROSS JOIN unnest(r.communities) AS c(community) \
+             WHERE NOT bgp.main.is_large_community(c.community) \
+             ORDER BY r.peer_asn, c.community;"
+            .to_string(),
+    )
+}
+
+/// A described example as the SDK's native `FunctionExample`.
+pub fn function_example((description, sql): (&str, String)) -> vgi::FunctionExample {
+    vgi::FunctionExample {
+        sql,
+        description: description.to_string(),
+        expected_output: None,
+    }
+}
 
 /// Encode comma-separated keywords as the JSON array of strings that
 /// `vgi.keywords` requires (VGI138). Each term is trimmed, empties dropped.

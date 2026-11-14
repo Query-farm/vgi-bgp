@@ -50,11 +50,14 @@ impl ScalarFunction for PathLength {
         FunctionMetadata {
             description: "Number of AS hops in an AS path".into(),
             return_type: Some(DataType::Int64),
-            examples: vec![FunctionExample {
-                sql: "SELECT bgp.main.path_length([7018, 174, 13335]);".into(),
-                description: "Count the AS hops in a path (here 3).".into(),
-                expected_output: None,
-            }],
+            examples: vec![
+                FunctionExample {
+                    sql: "SELECT bgp.main.path_length([7018, 174, 13335]);".into(),
+                    description: "Count the AS hops in a path (here 3).".into(),
+                    expected_output: None,
+                },
+                crate::meta::function_example(crate::meta::composed_path_changes()),
+            ],
             tags: {
                 let mut tags = crate::meta::object_tags(
                     "AS Path Length",
@@ -66,12 +69,16 @@ impl ScalarFunction for PathLength {
                     "path length, as path length, hops, route length, as_path, leak, hijack",
                     "AS-path analysis",
                 );
+                let path_changes = crate::meta::composed_path_changes();
                 tags.push((
                     "vgi.example_queries".into(),
-                    crate::meta::example_queries_json(&[(
-                        "Count the AS hops in a path (here 3).",
-                        "SELECT bgp.main.path_length([7018, 174, 13335]);",
-                    )]),
+                    crate::meta::example_queries_json(&[
+                        (
+                            "Count the AS hops in a path (here 3).",
+                            "SELECT bgp.main.path_length([7018, 174, 13335]);",
+                        ),
+                        (path_changes.0, &path_changes.1),
+                    ]),
                 ));
                 tags
             },

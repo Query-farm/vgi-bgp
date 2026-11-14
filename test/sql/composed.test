@@ -1,0 +1,68 @@
+# name: test/sql/composed.test
+# description: Queries that combine the worker's objects (RIB x updates joins,
+#              scalar helpers over decoded rows, the example_rib view) — the
+#              shapes published as composed examples and the agent task.
+# group: [sql]
+
+require-env VGI_BGP_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'bgp' AS bgp (TYPE vgi, LOCATION '${VGI_BGP_WORKER}');
+
+# RIB routes withdrawn by the later update stream (same peer + prefix); INET
+# structs join by value without LOAD inet.
+query IIII
+SELECT r.peer_asn, r.origin_asn, r.as_path, u.timestamp AS withdrawn_at
+FROM bgp.main.read_rib('data/rib.mrt') AS r
+JOIN bgp.main.read_updates('data/updates.mrt') AS u
+  ON u.peer_ip = r.peer_ip AND u.prefix = r.prefix
+WHERE u.message_type = 'withdraw' ORDER BY withdrawn_at, r.peer_asn;
+----
+65001	64512	[65001, 64500, 64500, 64512]	2025-06-29 00:00:02
+
+# RIB vs update path diff scored by path_length / as_path_prepends.
+query IIIIII
+SELECT r.peer_asn, r.origin_asn,
+       bgp.main.path_length(r.as_path), bgp.main.path_length(u.as_path),
+       bgp.main.as_path_prepends(r.as_path), bgp.main.as_path_prepends(u.as_path)
+FROM bgp.main.read_rib('data/rib.mrt') AS r
+JOIN bgp.main.read_updates('data/updates.mrt') AS u
+  ON u.peer_ip = r.peer_ip AND u.prefix = r.prefix
+WHERE u.message_type = 'announce' AND u.as_path <> r.as_path
+ORDER BY r.origin_asn, r.peer_asn;
+----
+65001	64512	4	3	1	0
+65001	64600	3	2	0	0
+
+# Standard communities decoded over the example_rib view.
+query IIIII
+SELECT r.peer_asn, r.origin_asn, c.community,
+       bgp.main.community_parse(c.community).asn,
+       bgp.main.community_parse(c.community).value
+FROM bgp.main.example_rib AS r
+CROSS JOIN unnest(r.communities) AS c(community)
+WHERE NOT bgp.main.is_large_community(c.community)
+ORDER BY r.peer_asn, c.community;
+----
+65001	64512	65001:100	65001	100
+65002	64512	65002:200	65002	200
+
+# example_rib carries peer_ip (needed to join it to read_updates by peer).
+query I
+SELECT count(*) FROM bgp.main.example_rib AS r
+JOIN bgp.main.read_rib('data/rib.mrt') AS f
+  ON f.peer_ip = r.peer_ip AND f.prefix = r.prefix;
+----
+3
+
+# Agent task transit_large_communities grader.
+query II
+SELECT origin_asn, len(list_filter(communities, lambda c: bgp.main.is_large_community(c))) AS large_communities
+FROM bgp.main.read_rib('data/rib.mrt')
+WHERE bgp.main.path_contains(as_path, 64500) ORDER BY origin_asn;
+----
+64512	1
+64600	1

@@ -157,6 +157,14 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                          peers.",
                     ),
                     (
+                        "transit_large_communities",
+                        "The file data/rib.mrt is an MRT TABLE_DUMP_V2 RIB snapshot. For each \
+                         route whose AS path passes through AS 64500, return its origin ASN and \
+                         how many RFC 8092 large communities it carries. Return two columns: \
+                         origin_asn (UINTEGER) and large_communities (BIGINT), one row per route, \
+                         ordered by origin_asn.",
+                    ),
+                    (
                         "sample_rows",
                         "The bgp worker exposes a small built-in sample of decoded RIB rows you \
                          can browse without providing a file. How many rows does that sample \
@@ -305,6 +313,12 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                     // Self-contained inline-BLOB examples (see the catalog note). For prefix
                     // containment in a real query add `LOAD inet;` and filter
                     // `WHERE prefix::INET >>= '203.0.113.5'::INET`.
+                    {
+                    let (withdrawn, path_changes, route_communities) = (
+                        crate::meta::composed_withdrawn_routes(),
+                        crate::meta::composed_path_changes(),
+                        crate::meta::composed_route_communities(),
+                    );
                     crate::meta::example_queries_json(&[
                         (
                             "Count the AS hops in an inline AS-path literal.",
@@ -356,7 +370,11 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                                 upd = crate::meta::UPD_MRT_HEX,
                             ),
                         ),
-                    ]),
+                        (path_changes.0, &path_changes.1),
+                        (withdrawn.0, &withdrawn.1),
+                        (route_communities.0, &route_communities.1),
+                    ])
+                    },
                 ),
             ],
             views: vec![example_rib_view()],
@@ -378,14 +396,14 @@ fn example_rib_view() -> CatView {
         "Sample RIB Routes",
         "A zero-setup preview of the row shape read_rib produces: three routes decoded from a \
          tiny TABLE_DUMP_V2 RIB fixture bundled into the worker. Browse it directly — a plain \
-         no-argument scan — to see real decoded columns like timestamp, RIB view name, prefix \
-         (INET), reporting peer ASN, origin ASN, AS path, next hop (INET), and communities before \
-         you have a file in hand. It takes no arguments and always returns the same three rows. \
+         no-argument scan — to see real decoded columns like timestamp, RIB view name, \
+         reporting peer (IP as INET, and ASN), prefix (INET), origin ASN, AS path, next hop \
+         (INET), and communities before you have a file in hand. It takes no arguments and always returns the same three rows. \
          For real data call read_rib / read_updates with a path or URL; this view is only a \
          self-describing example.",
         "A built-in, no-arguments sample of three decoded TABLE_DUMP_V2 RIB routes, so you can \
          browse `bgp.main.example_rib` to learn the reader's output columns without an MRT file. \
-         Cast the INET columns (`prefix`, `next_hop`) with `::INET`. Point read_rib at your own \
+         Cast the INET columns (`peer_ip`, `prefix`, `next_hop`) with `::INET`. Point read_rib at your own \
          archive for real data.",
         "sample, example, preview, demo, RIB, TABLE_DUMP_V2, browsable, getting started, prefix, \
          INET, AS path, origin ASN",
@@ -410,7 +428,7 @@ fn example_rib_view() -> CatView {
         // parameterized read_rib call — not pure indirection over a
         // parameterless function, so VGI145 does not apply).
         definition: format!(
-            "SELECT timestamp, view_name, prefix, peer_asn, origin_asn, as_path, next_hop, \
+            "SELECT timestamp, view_name, peer_ip, peer_asn, prefix, origin_asn, as_path, next_hop, \
              communities FROM bgp.main.read_rib(from_hex('{}'))",
             crate::meta::RIB_MRT_HEX
         ),
@@ -428,6 +446,11 @@ fn example_rib_view() -> CatView {
             (
                 "view_name".to_string(),
                 "RIB view / collector name from the fixture's PEER_INDEX_TABLE.".to_string(),
+            ),
+            (
+                "peer_ip".to_string(),
+                "The reporting peer's IP address in DuckDB's INET physical layout; cast `::INET`."
+                    .to_string(),
             ),
             (
                 "prefix".to_string(),

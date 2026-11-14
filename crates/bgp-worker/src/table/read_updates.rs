@@ -66,31 +66,38 @@ impl TableFunction for ReadUpdates {
         ));
         // VGI515: re-declare the example with a description (the native carrier
         // drops it); dedup keeps this copy over the bare native one.
+        let withdrawn = crate::meta::composed_withdrawn_routes();
         tags.push((
             "vgi.example_queries".into(),
-            crate::meta::example_queries_json(&[(
-                "Count announce / withdraw / state-change messages in an inline BGP4MP update \
-                 stream.",
-                &format!(
-                    "SELECT message_type, count(*) FROM bgp.main.read_updates(from_hex('{}')) \
-                     GROUP BY 1;",
-                    crate::meta::UPD_MRT_HEX
+            crate::meta::example_queries_json(&[
+                (
+                    "Count announce / withdraw / state-change messages in an inline BGP4MP \
+                     update stream.",
+                    &format!(
+                        "SELECT message_type, count(*) FROM bgp.main.read_updates(from_hex('{}')) \
+                         GROUP BY 1;",
+                        crate::meta::UPD_MRT_HEX
+                    ),
                 ),
-            )]),
+                (withdrawn.0, &withdrawn.1),
+            ]),
         ));
         FunctionMetadata {
             description: "Read an MRT BGP4MP update stream into rows".into(),
-            examples: vec![FunctionExample {
-                sql: format!(
-                    "SELECT message_type, count(*) FROM bgp.main.read_updates(from_hex('{}')) \
-                     GROUP BY 1;",
-                    crate::meta::UPD_MRT_HEX
-                ),
-                description: "Count announce / withdraw / state-change messages in an inline \
-                              BGP4MP update stream."
-                    .into(),
-                expected_output: None,
-            }],
+            examples: vec![
+                FunctionExample {
+                    sql: format!(
+                        "SELECT message_type, count(*) FROM bgp.main.read_updates(from_hex('{}')) \
+                         GROUP BY 1;",
+                        crate::meta::UPD_MRT_HEX
+                    ),
+                    description: "Count announce / withdraw / state-change messages in an inline \
+                                  BGP4MP update stream."
+                        .into(),
+                    expected_output: None,
+                },
+                crate::meta::function_example(withdrawn),
+            ],
             tags,
             ..Default::default()
         }

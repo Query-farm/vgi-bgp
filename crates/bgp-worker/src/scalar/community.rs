@@ -44,11 +44,14 @@ impl ScalarFunction for CommunityParse {
         FunctionMetadata {
             description: "Parse a standard community 'asn:value' into a STRUCT(asn, value)".into(),
             return_type: Some(DataType::Struct(community_struct_fields())),
-            examples: vec![FunctionExample {
-                sql: "SELECT bgp.main.community_parse('65001:100');".into(),
-                description: "Split a standard community into {asn: 65001, value: 100}.".into(),
-                expected_output: None,
-            }],
+            examples: vec![
+                FunctionExample {
+                    sql: "SELECT bgp.main.community_parse('65001:100');".into(),
+                    description: "Split a standard community into {asn: 65001, value: 100}.".into(),
+                    expected_output: None,
+                },
+                crate::meta::function_example(crate::meta::composed_route_communities()),
+            ],
             tags: {
                 let mut tags = crate::meta::object_tags(
                     "Parse BGP Community",
@@ -62,12 +65,16 @@ impl ScalarFunction for CommunityParse {
                     "community parse, bgp community, asn value, standard community, tag, decode",
                     "BGP communities",
                 );
+                let route_communities = crate::meta::composed_route_communities();
                 tags.push((
                     "vgi.example_queries".into(),
-                    crate::meta::example_queries_json(&[(
-                        "Split a standard community into {asn: 65001, value: 100}.",
-                        "SELECT bgp.main.community_parse('65001:100');",
-                    )]),
+                    crate::meta::example_queries_json(&[
+                        (
+                            "Split a standard community into {asn: 65001, value: 100}.",
+                            "SELECT bgp.main.community_parse('65001:100');",
+                        ),
+                        (route_communities.0, &route_communities.1),
+                    ]),
                 ));
                 tags
             },

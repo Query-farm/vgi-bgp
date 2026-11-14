@@ -132,6 +132,19 @@ FROM bgp.main.read_rib('s3://my-dumps/rib.bz2') r
 LEFT JOIN vrp v ON r.origin_asn = v.asn
                 AND r.prefix::INET <<= v.prefix::INET;
 
+-- diff a RIB snapshot against the later update stream: which routes changed
+-- path, and did they get shorter or lose a prepend?
+SELECT r.prefix::INET AS prefix, r.as_path AS rib_path, u.as_path AS update_path,
+       bgp.main.path_length(r.as_path) AS rib_hops,
+       bgp.main.path_length(u.as_path) AS update_hops,
+       bgp.main.as_path_prepends(r.as_path) AS rib_prepends,
+       bgp.main.as_path_prepends(u.as_path) AS update_prepends
+FROM bgp.main.read_rib('data/rib.mrt') r
+JOIN bgp.main.read_updates('data/updates.mrt') u
+  ON u.peer_ip = r.peer_ip AND u.prefix = r.prefix
+WHERE u.message_type = 'announce' AND u.as_path <> r.as_path
+ORDER BY prefix;
+
 -- enumerate the collector's vantage points
 SELECT peer_ip::INET AS peer, peer_asn FROM bgp.main.peers('/dumps/rib.bz2');
 ```

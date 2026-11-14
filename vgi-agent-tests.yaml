@@ -26,5 +26,7 @@ tasks:
     reference_sql: "SELECT count(*) AS withdrawals FROM bgp.main.read_updates('data/updates.mrt') WHERE message_type = 'withdraw'"
   - name: "peer_count"
     reference_sql: "SELECT count(*) AS peers FROM bgp.main.peers('data/rib.mrt')"
+  - name: "transit_large_communities"
+    reference_sql: "SELECT origin_asn, len(list_filter(communities, lambda c: bgp.main.is_large_community(c))) AS large_communities FROM bgp.main.read_rib('data/rib.mrt') WHERE bgp.main.path_contains(as_path, 64500) ORDER BY origin_asn"
   - name: "sample_rows"
     reference_sql: "SELECT count(*) AS rows FROM bgp.main.example_rib"
