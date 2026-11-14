@@ -1,0 +1,7 @@
+Shared notebook tools v0.3.8; complete default runs in fresh kernels.
+Updated vgi-example-notebooks v0.3.6 (31eb1be7) -> v0.3.8 (025173bd)
+Running 01_a_withdrawal_belongs_to_a_peer.ipynb ...
+OK: 22 code cells, 2 charts, 3.9s
+Running 02_community_shape_comes_before_policy.ipynb ...
+OK: 18 code cells, 1 charts, 2.4s
+All saved output cells are byte-identical to the previous publication. Analytical code is unchanged.

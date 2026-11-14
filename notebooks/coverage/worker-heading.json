@@ -1,0 +1,26 @@
+{
+  "repository": "Query-farm/vgi-bgp",
+  "title": "BGP MRT Decoder",
+  "subtitle": "Query RouteViews and RIPE RIS MRT archives (RIB snapshots and BGP updates) as SQL rows, with AS-path and community helpers.",
+  "evidence_sha256": "7943300a73ad5b61a4e144e989192c83429e30fe1edfdf7f6db9f94e9e003c34",
+  "provenance": "Actual catalog tags from the released runtime used by the notebook",
+  "worker_release": "v0.4.0",
+  "runtime_export": {
+    "attach": "ATTACH 'bgp' (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-bgp@v0.4.0');",
+    "query": "SELECT database_name, comment, map_extract_value(tags,'vgi.title') AS title, map_extract_value(tags,'vgi.subtitle') AS subtitle FROM duckdb_databases() WHERE map_extract_value(tags,'vgi.title') IS NOT NULL",
+    "columns": [
+      "database_name",
+      "comment",
+      "title",
+      "subtitle"
+    ],
+    "rows": [
+      [
+        "bgp",
+        "Decode MRT routing dumps (BGP4MP updates + TABLE_DUMP_V2 RIB snapshots) into SQL rows, reusing the core INET type for prefixes and peer IPs.",
+        "BGP MRT Decoder",
+        "Query RouteViews and RIPE RIS MRT archives (RIB snapshots and BGP updates) as SQL rows, with AS-path and community helpers."
+      ]
+    ]
+  }
+}
