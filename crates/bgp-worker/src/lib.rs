@@ -95,7 +95,17 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  '203.0.113.0/24'` and prefix joins work directly. AS paths are `LIST(UINTEGER)` \
                  and BGP communities are `LIST(VARCHAR)`; scalar helpers operate on those columns. \
                  RPKI / route-origin validation is out of scope — JOIN the origin AS against your \
-                 VRP table (ROV lives in vgi-netflow)."
+                 VRP table (ROV lives in vgi-netflow).\n\n## Sources and references\n\n\
+                 - [RFC 6396](https://www.rfc-editor.org/rfc/rfc6396) — the MRT routing \
+                 information export format (BGP4MP and TABLE_DUMP_V2)\n\
+                 - [RFC 4271](https://www.rfc-editor.org/rfc/rfc4271) — BGP-4, the protocol whose \
+                 UPDATE messages and path attributes the rows carry\n\
+                 - [RFC 8092](https://www.rfc-editor.org/rfc/rfc8092) — BGP large communities \
+                 (`a:b:c`)\n\
+                 - [RouteViews archive](https://archive.routeviews.org/) and \
+                 [RIPE RIS raw data](https://ris.ripe.net/docs/mrt/) — public MRT dumps to query\n\
+                 - [bgpkit-parser](https://github.com/bgpkit/bgpkit-parser) — the MRT decoding \
+                 library this worker uses"
                     .to_string(),
             ),
             (
