@@ -97,8 +97,8 @@ cargo clippy --all-targets -- -D warnings   # keep clean
 cargo fmt --all -- --check
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
 cargo build --release                       # the worker binary
-./run_tests.sh                              # haybarn SQLLogic e2e
-./run_tests.sh test/sql/read_rib.test       # single file (trailing-* Catch2 filter)
+make test-sql                               # haybarn SQLLogic e2e
+TEST_PATTERN=test/sql/read_rib.test make test-sql TRANSPORTS=stdio       # single file (trailing-* Catch2 filter)
 ```
 
 vgi-lint (metadata quality), gated at `fail-on=info`:

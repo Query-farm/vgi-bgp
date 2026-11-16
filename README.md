@@ -170,7 +170,7 @@ free iptoasn / RIR delegated-stats tables).
 cargo build --release                       # build the worker binary
 cargo test --workspace                      # unit + golden + proptest fuzzing
 cargo clippy --all-targets -- -D warnings   # lint
-./run_tests.sh                              # haybarn SQLLogic e2e (see below)
+make test-sql                               # haybarn SQLLogic e2e (see below)
 ```
 
 The end-to-end suite needs the haybarn tooling (one-time):
@@ -181,8 +181,9 @@ echo "FORCE INSTALL vgi FROM community;" | uvx --prerelease allow --from 'haybar
 echo "INSTALL inet;"               | uvx --prerelease allow --from 'haybarn-cli>=2.0.0rc11,<2.1' haybarn-cli
 ```
 
-`run_tests.sh` builds the worker and runs `haybarn-unittest` against
-`test/sql/*` with `VGI_BGP_WORKER` pointed at the binary (and
+`make test-sql` builds the worker and runs `haybarn-unittest` (via
+`ci/run-integration.sh`) against `test/sql/*` over the stdio, launch and http
+transports, with `VGI_BGP_WORKER` pointed at the binary (and
 `VGI_BGP_BATCH_ROWS=1`, which forces one row per Arrow batch to exercise the
 byte-offset scan state crossing batch boundaries).
 

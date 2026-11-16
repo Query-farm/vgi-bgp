@@ -1,6 +1,6 @@
 # name: test/sql/scan_state.test
 # description: the byte-offset scan state round-trips across Arrow batch
-#              boundaries. run_tests.sh sets VGI_BGP_BATCH_ROWS=1, so each record
+#              boundaries. ci/run-integration.sh sets VGI_BGP_BATCH_ROWS=1, so each record
 #              is emitted in its own batch — the full row set must still
 #              reassemble exactly, proving the producer streams correctly across
 #              batch boundaries.

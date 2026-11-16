@@ -75,7 +75,7 @@ jobs:
       version_check_cmd: "ci/check-version.sh"
       # Validate the built image's transports against the signed vgi extension.
       # The worker *logic* is already exercised every run by the gating `ci` job
-      # (all test/sql/*, subprocess transport, via ./run_tests.sh), so here we
+      # (all test/sql/*, stdio/launch/http, via ci/run-integration.sh), so here we
       # only prove the IMAGE's entrypoints speak the protocol end to end:
       #   - stdio: smoke the file-free scalars suite through `docker run … stdio`
       #            (the on-host spawn mode DuckDB uses);
