@@ -39,7 +39,7 @@ glob = "0.3"
 # parallel-scan work queue), and the SDK's rusqlite 0.39 pin bundles a SQLite
 # affected by RUSTSEC-2026-0459. Without it the SDK falls back to its
 # zero-dependency filesystem store (VGI_WORKER_SHARED_STORAGE=fs).
-vgi = { workspace = true, features = ["transport-http"] }
+vgi = { workspace = true, features = ["transport-http", "blob-vendor"] }
 vgi-rpc = { workspace = true, features = ["http"] }
 object_store = { version = "0.14", features = ["aws", "http"] }
 tokio = { version = "1", features = ["rt-multi-thread"] }
